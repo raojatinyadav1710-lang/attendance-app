@@ -1,186 +1,784 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827"><link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
 <title>College Attendance</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#1F3D33" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box} :root{--bg:#f3f5f9;--card:#fff;--ink:#182230;--muted:#667085;--line:#e4e7ec;--blue:#4f46e5;--green:#087443;--red:#b42318;--amber:#b54708}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-header{background:#111827;color:#fff;padding:16px;position:sticky;top:0;z-index:20;box-shadow:0 2px 12px #0002}
-.head{max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
-h1{font-size:20px;margin:0}.subtitle{font-size:11px;color:#cbd5e1;margin-top:3px}
-.wrap{max-width:1200px;margin:auto;padding:12px}
-.tabs{display:flex;gap:6px;overflow:auto;margin-bottom:12px}.tab{background:#fff;border:1px solid var(--line);padding:9px 13px;border-radius:10px;white-space:nowrap;font-weight:700}.tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 12px}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button.danger{color:var(--red)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:13px;margin-bottom:12px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px}.stat b{font-size:21px;display:block}.stat span{font-size:11px;color:var(--muted)}.bar{height:7px;background:#eef0f3;border-radius:99px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;background:var(--blue)}
-.weekTitle{font-size:17px;font-weight:800;margin:3px 0 10px}.scroll{overflow:auto}.grid{min-width:1030px;display:grid;grid-template-columns:90px repeat(5,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}.cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:96px;padding:7px}.th{background:#f8fafc;min-height:62px;text-align:center;font-weight:800;position:sticky;top:0;z-index:4}.th small{display:block;color:var(--muted);font-weight:500;margin-top:3px}.time{text-align:center;background:#fafafa;color:var(--muted);font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;position:sticky;left:0;z-index:3}
-.code{font-weight:900;font-size:13px}.name{font-size:10px;color:var(--muted);line-height:1.2;margin-top:2px}.actions{display:flex;gap:5px;margin-top:8px}.actions button{padding:6px 4px;font-size:10px;flex:1}.p.on{background:#e9f8ef;color:var(--green);border-color:#b7e1c8;font-weight:800}.a.on{background:#fff0ee;color:var(--red);border-color:#f2c3bd;font-weight:800}.empty{text-align:center;color:#a0a7b2;padding-top:27px;font-size:12px}
-.calendarHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.calendarHead strong{font-size:18px}.cal{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}.dow,.day{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.dow{padding:8px;text-align:center;font-size:11px;color:var(--muted);font-weight:800;background:#fafafa}.day{min-height:78px;padding:6px;cursor:pointer}.day.muted{background:#fafafa;color:#b5bac3}.day.today{outline:2px solid var(--blue);outline-offset:-2px}.day.selected{background:#eef2ff}.num{font-weight:800;font-size:12px}.dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px}.dot{width:7px;height:7px;border-radius:50%}.dot.p{background:#16a34a}.dot.a{background:#dc2626}.daypct{font-size:10px;color:var(--muted);margin-top:5px}
-.subject{display:grid;grid-template-columns:1.5fr 70px 70px 80px 1.5fr;gap:7px;align-items:center;border-bottom:1px solid var(--line);padding:10px 0;font-size:12px}.subject:last-child{border-bottom:0}.pct{text-align:right;font-weight:900}.good{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--amber)}.small{font-size:11px;color:var(--muted)}
-.notice{padding:10px;border-radius:11px;background:#fff8e7;color:#8a4b08;border:1px solid #f6d28a;font-size:12px;margin-top:10px}
-.hidden{display:none!important}.row{display:flex;gap:8px;align-items:center;justify-content:space-between}.select{padding:9px;border:1px solid var(--line);border-radius:9px;background:#fff}
-.footer{text-align:center;color:var(--muted);font-size:10px;padding:15px}
-@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.subject{grid-template-columns:1.4fr 45px 45px 60px}.subject .advice{grid-column:1/-1}.day{min-height:65px}.head{align-items:flex-start}.wrap{padding:9px}}
+  :root{
+    --ink:#1F3D33; --paper:#F4EEE1; --card:#F8F3E7; --card2:#F1E7CB;
+    --rule:#D9CDA8; --rule2:#C7B98C; --muted:#7C6A46; --muted2:#5B4D34;
+    --gold:#A9852F; --present:#146B5A; --absent:#8C2F3B; --today:#E9DCB6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Work Sans',sans-serif; background:var(--paper); color:var(--ink);
+    min-height:100vh; padding-bottom:70px;
+  }
+  .serif{font-family:'Fraunces',serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  button{font-family:inherit; cursor:pointer;}
+  input,select{font-family:inherit; font-size:15px;}
+  a{color:var(--gold);}
+
+  header.top{
+    border-bottom:3px double var(--ink); padding:18px 16px 12px; text-align:center; background:var(--card);
+  }
+  header.top .kicker{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:2px; color:var(--muted);}
+  header.top h1{font-size:24px; margin:4px 0 2px;}
+  header.top .sub{font-size:12px; color:var(--muted2);}
+
+  .wrap{max-width:640px; margin:0 auto; padding:16px;}
+  .card{background:var(--card); border:1px solid var(--rule2); border-radius:10px; padding:18px 16px; margin-bottom:16px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:12px; color:var(--muted2); margin-bottom:4px; font-weight:600;}
+  .field input, .field select{
+    width:100%; padding:10px 12px; border:1px solid var(--rule2); border-radius:6px; background:var(--paper); color:var(--ink);
+  }
+  .btn{
+    display:inline-block; padding:11px 18px; border-radius:6px; border:none; font-size:14px; font-weight:600;
+  }
+  .btn-primary{background:var(--ink); color:var(--card);}
+  .btn-gold{background:var(--gold); color:var(--card);}
+  .btn-outline{background:transparent; border:1px solid var(--rule2); color:var(--muted2);}
+  .btn-danger{background:transparent; border:1px solid var(--absent); color:var(--absent);}
+  .btn-block{width:100%; text-align:center;}
+  .err{color:var(--absent); font-size:13px; margin:8px 0;}
+  .msg{color:var(--present); font-size:13px; margin:8px 0;}
+  .center{text-align:center;}
+  .muted{color:var(--muted); font-size:12.5px;}
+
+  nav.tabs{
+    position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--rule2);
+    display:flex; justify-content:space-around; padding:6px 2px calc(6px + env(safe-area-inset-bottom));
+    z-index:20;
+  }
+  nav.tabs button{
+    background:none; border:none; font-size:10.5px; color:var(--muted); display:flex; flex-direction:column;
+    align-items:center; gap:2px; padding:6px 4px; flex:1; border-radius:8px;
+  }
+  nav.tabs button.active{color:var(--ink); font-weight:700; background:var(--today);}
+  nav.tabs .ic{font-size:18px;}
+
+  table{border-collapse:collapse; width:100%;}
+  .grid-wrap{overflow-x:auto; border:1px solid var(--rule2); border-radius:10px; background:var(--card);}
+  th,td{border-bottom:1px solid var(--rule); padding:8px 6px; font-size:12px;}
+  th{background:transparent; color:var(--muted); font-weight:600; font-size:11px;}
+  td.timecol{white-space:nowrap; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); border-right:1px solid var(--rule);}
+  td.lec{text-align:center; min-width:92px; vertical-align:middle;}
+  td.lec.today{background:var(--today);}
+  .stamp-btn{
+    width:100%; margin-top:4px; padding:5px 2px; border-radius:4px; font-size:10px; font-weight:700; letter-spacing:.5px;
+    border:1.5px dashed var(--rule2); background:transparent; color:var(--rule2);
+  }
+  .stamp-btn.present{border:1.5px solid var(--present); color:var(--present); background:transparent;}
+  .stamp-btn.absent{border:1.5px solid var(--absent); color:var(--absent); background:transparent;}
+
+  .stat-big{font-size:44px; font-weight:700; margin:4px 0;}
+  .pill{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600;}
+  .pill.ok{background:#DCE9DE; color:var(--present);}
+  .pill.warn{background:#F1E1C6; color:var(--gold);}
+  .pill.bad{background:#F0D6D9; color:var(--absent);}
+
+  .subj-row{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--rule); padding:10px 0;}
+  .subj-row:last-child{border-bottom:none;}
+  .subj-name{font-size:13px; font-weight:600;}
+  .subj-sub{font-size:10.5px; color:var(--muted);}
+  .subj-pct{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px;}
+
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+  .cal-cell{
+    aspect-ratio:1; border:1px solid var(--rule); border-radius:6px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-size:11px; background:var(--card2); position:relative;
+  }
+  .cal-cell.today{outline:2px solid var(--gold);}
+  .cal-cell.empty{visibility:hidden;}
+  .cal-dot{width:5px; height:5px; border-radius:50%; position:absolute; bottom:4px;}
+  .cal-dot.p{background:var(--present); left:calc(50% - 7px);}
+  .cal-dot.a{background:var(--absent); left:calc(50% + 2px);}
+
+  .modal-bg{position:fixed; inset:0; background:rgba(31,61,51,0.45); display:flex; align-items:flex-end; z-index:50;}
+  .modal{background:var(--paper); width:100%; border-radius:16px 16px 0 0; padding:20px 16px 28px; max-height:85vh; overflow-y:auto;}
+  .modal h3{margin-top:0;}
+  .row2{display:flex; gap:8px;}
+  .row2 .field{flex:1;}
+
+  .day-block{margin-bottom:14px;}
+  .day-block h4{margin:0 0 6px; font-size:13px; color:var(--muted2);}
+  .lec-chip{
+    display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--rule2);
+    border-radius:8px; padding:8px 10px; margin-bottom:6px; font-size:12.5px;
+  }
+  .lec-chip .rm{color:var(--absent); font-size:11px; border:none; background:none;}
+
+  .weeknav{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .weeknav button{background:var(--card); border:1px solid var(--rule2); border-radius:6px; width:34px; height:34px; font-size:16px;}
+  .hide{display:none !important;}
+  #toast{
+    position:fixed; bottom:76px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--card);
+    padding:10px 16px; border-radius:8px; font-size:13px; z-index:60; max-width:90vw; text-align:center;
+  }
 </style>
 </head>
 <body>
-<header><div class="head"><div><h1>📚 My College Attendance</h1><div class="subtitle">BA-LL.B (H) • Semester III • Batch 2025–30</div></div><div id="overallTop"></div></div></header>
-<div class="wrap">
-  <div class="tabs">
-    <button class="tab active" id="tabWeek" onclick="showTab('week')">Weekly Grid</button>
-    <button class="tab" id="tabCal" onclick="showTab('calendar')">📅 Calendar</button>
-    <button class="tab" id="tabSub" onclick="showTab('subjects')">📊 Subjects</button>
-  </div>
 
-  <section id="weekTab">
-    <div class="toolbar">
-      <button onclick="moveWeek(-1)">← Previous Week</button>
-      <button class="primary" onclick="goToday()">Today</button>
-      <button onclick="moveWeek(1)">Next Week →</button>
-      <button onclick="exportBackup()">Backup</button>
-      <button onclick="document.getElementById('importFile').click()">Restore</button>
-      <button class="danger" onclick="resetAll()">Reset</button>
-    </div>
-    <div id="weekTitle" class="weekTitle"></div>
-    <div id="stats" class="stats"></div>
-    <div class="card">
-      <div class="scroll"><div id="weekGrid" class="grid"></div></div>
-    </div>
-    <div class="card">
-      <div class="row"><b>📋 Daily Lecture List</b><span class="small">No horizontal scrolling needed</span></div>
-      <div id="dailyList"></div>
-    </div>
-  </section>
-
-  <section id="calendarTab" class="hidden">
-    <div class="card">
-      <div class="calendarHead">
-        <button onclick="moveMonth(-1)">←</button><strong id="monthTitle"></strong><button onclick="moveMonth(1)">→</button>
-      </div>
-      <div class="small" style="margin-bottom:9px">Tap any date to open that day's lectures. Past weeks remain saved.</div>
-      <div id="calendar" class="cal"></div>
-    </div>
-    <div class="card" id="selectedDay"></div>
-  </section>
-
-  <section id="subjectsTab" class="hidden">
-    <div class="card"><h2 style="margin:0 0 8px;font-size:17px">Subject-wise Attendance</h2><div class="notice" style="margin-bottom:10px">💡 <b>ECO-II — Economics-II</b> is scheduled at <b>9:10 AM</b> on Tuesday, Wednesday, Thursday and Friday.</div><div class="small">75% target is used for the warnings and “classes you can miss” calculation.</div><div id="subjectList"></div></div>
-  </section>
-
-  <div class="card">
-    <div class="row"><b>Overall attendance</b><b id="overallPct">0%</b></div>
-    <div class="bar"><i id="overallBar" style="width:0%"></i></div>
-    <div id="overallAdvice" class="notice hidden"></div>
-  </div>
-  <div class="footer">Attendance is stored locally on this device. Use Backup regularly if you change phones or clear browser data.</div>
-</div>
-<input id="importFile" type="file" accept=".json" class="hidden">
+<div id="toast" class="hide"></div>
+<div id="root"></div>
 
 <script>
-const schedule={
-Monday:{"10:10":"H-II","11:10":"CL-II","12:10":"LOCrime-I","2:10":"PS-II","3:10":"FL-I"},
-Tuesday:{"9:10":"ECO-II","10:10":"H-II","11:10":"CL-II","2:10":"PS-II","3:10":"FL-I"},
-Wednesday:{"9:10":"ECO-II","11:10":"CL-II","12:10":"LOCrime-I"},
-Thursday:{"9:10":"ECO-II","10:10":"H-II","12:10":"LOCrime-I","2:10":"PS-II","3:10":"FL-I"},
-Friday:{"9:10":"ECO-II","10:10":"H-II","11:10":"CL-II","12:10":"LOCrime-I","2:10":"PS-II","3:10":"FL-I"}
-};
-const names={"CL-II":"Constitutional Law-II","FL-I":"Family Law-I","PS-II":"Political Science-II","LOCrime-I":"Law of Crimes-I","H-II":"History-II","ECO-II":"Economics-II"};
-const times=["9:10","10:10","11:10","12:10","1:10","2:10","3:10","4:10"], days=["Monday","Tuesday","Wednesday","Thursday","Friday"];
-let attendance=JSON.parse(localStorage.getItem("collegeAttendanceV2")||"{}");
-let viewDate=new Date(), monthDate=new Date(), selectedDate=new Date();
+/* ===================== CONFIG ===================== */
+const SUPABASE_URL = "https://yfszgpmljcymboefclvm.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_q40P2U2YuhDC8uZBLp-TZQ_t7Tiw0DC";
+const EMAIL_DOMAIN = "attendance.local"; // synthetic email domain, users never see this
+const DAY_NAMES = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
 
-function pad(n){return String(n).padStart(2,"0")}
-function key(d,t){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"|"+t}
-function dateKey(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
-function mon(d){let x=new Date(d);let n=x.getDay();x.setDate(x.getDate()+(n===0?-6:1-n));return x}
-function fmt(d){return d.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}
-function short(d){return d.toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}
-function save(){localStorage.setItem("collegeAttendanceV2",JSON.stringify(attendance))}
-function get(d,t){return attendance[key(d,t)]||""}
-function set(d,t,v){let k=key(d,t);if(v)attendance[k]=v;else delete attendance[k];save();renderAll()}
-function allRecords(){
- let r=[];
- for(const [k,v] of Object.entries(attendance)){let [ds,t]=k.split("|"), [y,m,dd]=ds.split("-").map(Number), d=new Date(y,m-1,dd), day=days[d.getDay()-1]; if(day&&schedule[day]?.[t]&&(v==="P"||v==="A"))r.push({d,t,code:schedule[day][t],v})}
- return r
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const root = document.getElementById("root");
+
+/* ===================== STATE ===================== */
+let state = {
+  view: "loading", // loading | auth-login | auth-signup | setup | dashboard | week | calendar | subjects | settings
+  session: null,
+  profile: null,
+  subjects: [],
+  timetable: [],       // {id, day, start_time, end_time, subject_id, subjects:{name,code,teacher}}
+  attendance: {},       // key `${timetable_id}_${iso}` -> 'P' | 'A'
+  weekStart: mondayOf(new Date()),
+  calMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  authError: "",
+  authBusy: false,
+};
+
+function toast(msg, ms=2200){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.remove("hide");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.add("hide"), ms);
 }
-function stats(code){
- let r=allRecords().filter(x=>!code||x.code===code),p=r.filter(x=>x.v==="P").length,a=r.filter(x=>x.v==="A").length,t=p+a;
- return {p,a,t,pct:t?Math.round(p/t*100):0}
+
+/* ===================== DATE HELPERS ===================== */
+function toISO(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return `${y}-${m}-${day}`; }
+function mondayOf(d){ const date=new Date(d); const dow=date.getDay(); const diff = dow===0 ? -6 : 1-dow; date.setDate(date.getDate()+diff); date.setHours(0,0,0,0); return date; }
+function addDays(d,n){ const date=new Date(d); date.setDate(date.getDate()+n); return date; }
+function fmtShort(d){ return d.toLocaleDateString("en-IN",{day:"numeric", month:"short"}); }
+function sameDate(a,b){ return toISO(a)===toISO(b); }
+function todayMid(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+
+/* ===================== 75% MATH ===================== */
+function calc75(present, total){
+  if(total===0) return {pct:null, canMiss:null, needAttend:null};
+  const pct = (present/total)*100;
+  if(pct >= 75){
+    const canMiss = Math.max(0, Math.floor(present/0.75 - total));
+    return {pct, canMiss, needAttend:0};
+  } else {
+    const needAttend = Math.max(0, Math.ceil((0.75*total - present)/0.25));
+    return {pct, canMiss:0, needAttend};
+  }
 }
-function attendanceAdvice(s){
- if(!s.t)return "No attendance marked yet.";
- if(s.pct>=75){let can=Math.floor(s.p/0.75-s.t);return `You can miss about <b>${Math.max(0,can)}</b> more class${can===1?"":"es"} and still remain at or above 75%, assuming no additional classes are attended in between.`}
- let need=Math.ceil((0.75*s.t-s.p)/0.25); return `You are below 75%. You need to attend the next <b>${Math.max(0,need)}</b> consecutive classes (without another absence) to reach 75%.`;
+
+/* ===================== AUTH ===================== */
+function usernameToEmail(u){ return `${u.trim().toLowerCase()}@${EMAIL_DOMAIN}`; }
+
+async function doSignup(fields){
+  state.authError = ""; state.authBusy = true; render();
+  const { username, password, confirm, full_name, college, course, semester } = fields;
+  if(!username || !password){ state.authError="Username and password are required."; state.authBusy=false; render(); return; }
+  if(password !== confirm){ state.authError="Passwords don't match."; state.authBusy=false; render(); return; }
+  if(password.length < 6){ state.authError="Password should be at least 6 characters."; state.authBusy=false; render(); return; }
+  if(!/^[a-zA-Z0-9_]{3,20}$/.test(username)){ state.authError="Username: 3-20 letters, numbers, or underscore only."; state.authBusy=false; render(); return; }
+
+  const email = usernameToEmail(username);
+  const { data, error } = await sb.auth.signUp({
+    email, password,
+    options:{ data:{ username: username.trim(), full_name: full_name||"", college: college||"", course: course||"", semester: semester||"" } }
+  });
+  state.authBusy = false;
+  if(error){
+    if(String(error.message).toLowerCase().includes("already")) state.authError="That username is already taken.";
+    else state.authError = error.message;
+    render(); return;
+  }
+  if(!data.session){
+    state.authError = "Account created, but email confirmation is still ON in Supabase — turn it off (Authentication > Settings) then log in.";
+    render(); return;
+  }
+  await afterLogin(data.session);
 }
-function renderStats(){
- let s=stats(); document.getElementById("stats").innerHTML=`<div class="stat"><b>${s.p}</b><span>Present</span></div><div class="stat"><b>${s.a}</b><span>Absent</span></div><div class="stat"><b>${s.t}</b><span>Total marked</span></div><div class="stat"><b>${s.pct}%</b><span>Overall</span><div class="bar"><i style="width:${s.pct}%"></i></div></div>`;
- document.getElementById("overallPct").textContent=s.pct+"%";document.getElementById("overallBar").style.width=s.pct+"%";
- let ad=document.getElementById("overallAdvice");ad.innerHTML=attendanceAdvice(s);ad.classList.toggle("hidden",!s.t);
+
+async function doLogin(fields){
+  state.authError=""; state.authBusy=true; render();
+  const { username, password } = fields;
+  if(!username || !password){ state.authError="Enter your username and password."; state.authBusy=false; render(); return; }
+  const email = usernameToEmail(username);
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  state.authBusy=false;
+  if(error){ state.authError="Incorrect username or password."; render(); return; }
+  await afterLogin(data.session);
 }
+
+async function doLogout(){
+  await sb.auth.signOut();
+  state = { ...state, session:null, profile:null, subjects:[], timetable:[], attendance:{}, view:"auth-login" };
+  render();
+}
+
+async function afterLogin(session){
+  state.session = session;
+  await loadEverything();
+  state.view = state.timetable.length === 0 ? "setup" : "dashboard";
+  render();
+}
+
+/* ===================== DATA LOADING ===================== */
+async function loadEverything(){
+  const uid = state.session.user.id;
+  const { data: profile } = await sb.from("profiles").select("*").eq("id", uid).maybeSingle();
+  state.profile = profile;
+
+  const { data: subjects } = await sb.from("subjects").select("*").eq("user_id", uid).order("created_at");
+  state.subjects = subjects || [];
+
+  const { data: timetable } = await sb.from("timetable").select("*, subjects(name,code,teacher)").eq("user_id", uid);
+  state.timetable = (timetable||[]).sort((a,b)=> a.start_time.localeCompare(b.start_time));
+
+  const { data: attendance } = await sb.from("attendance").select("*").eq("user_id", uid);
+  const map = {};
+  (attendance||[]).forEach(r => { map[`${r.timetable_id}_${r.lecture_date}`] = r.status; });
+  state.attendance = map;
+}
+
+/* ===================== TIMETABLE SETUP / EDIT ===================== */
+async function addLecture(day, subjName, subjCode, teacher, startTime, endTime){
+  const uid = state.session.user.id;
+  let subject = state.subjects.find(s => s.code.toLowerCase() === subjCode.trim().toLowerCase());
+  if(!subject){
+    const { data, error } = await sb.from("subjects").insert({ user_id:uid, name:subjName.trim(), code:subjCode.trim(), teacher:teacher.trim()||null }).select().single();
+    if(error){ toast("Couldn't add subject: "+error.message); return; }
+    subject = data;
+    state.subjects.push(subject);
+  }
+  const { data: tt, error: e2 } = await sb.from("timetable").insert({
+    user_id:uid, subject_id:subject.id, day, start_time:startTime, end_time:endTime||null
+  }).select("*, subjects(name,code,teacher)").single();
+  if(e2){ toast("Couldn't add lecture: "+e2.message); return; }
+  state.timetable.push(tt);
+  state.timetable.sort((a,b)=> a.start_time.localeCompare(b.start_time));
+  render();
+}
+
+async function removeLecture(id){
+  const { error } = await sb.from("timetable").delete().eq("id", id);
+  if(error){ toast("Couldn't remove: "+error.message); return; }
+  state.timetable = state.timetable.filter(t => t.id !== id);
+  render();
+}
+
+async function useExampleTimetable(){
+  const uid = state.session.user.id;
+  const SCHEDULE = {
+    Monday:[["H-II","History-II","Sharma","10:10","11:10"],["CL-II","Constitutional Law-II","Mishra","11:10","12:10"],["LOCrime-I","Law of Crimes-I","Sisodia","12:10","13:10"],["PS-II","Political Science-II","Rastogi","14:10","15:10"],["FL-I","Family Law-I","Pooja","15:10","16:10"]],
+    Tuesday:[["ECO-II","Economics-II","Singh","09:10","10:10"],["H-II","History-II","Sharma","10:10","11:10"],["CL-II","Constitutional Law-II","Mishra","11:10","12:10"],["PS-II","Political Science-II","Rastogi","14:10","15:10"],["FL-I","Family Law-I","Pooja","15:10","16:10"]],
+    Wednesday:[["ECO-II","Economics-II","Singh","09:10","10:10"],["CL-II","Constitutional Law-II","Mishra","11:10","12:10"],["LOCrime-I","Law of Crimes-I","Sisodia","12:10","13:10"]],
+    Thursday:[["ECO-II","Economics-II","Singh","09:10","10:10"],["H-II","History-II","Sharma","10:10","11:10"],["LOCrime-I","Law of Crimes-I","Sisodia","12:10","13:10"],["PS-II","Political Science-II","Rastogi","14:10","15:10"],["FL-I","Family Law-I","Pooja","15:10","16:10"]],
+    Friday:[["ECO-II","Economics-II","Singh","09:10","10:10"],["H-II","History-II","Sharma","10:10","11:10"],["CL-II","Constitutional Law-II","Mishra","11:10","12:10"],["LOCrime-I","Law of Crimes-I","Sisodia","12:10","13:10"],["PS-II","Political Science-II","Rastogi","14:10","15:10"],["FL-I","Family Law-I","Pooja","15:10","16:10"]],
+  };
+  toast("Adding example timetable…");
+  for(const day of DAY_NAMES){
+    for(const [code,name,teacher,start,end] of SCHEDULE[day]){
+      await addLecture(day, name, code, teacher, start, end);
+    }
+  }
+  toast("Example timetable added");
+}
+
+/* ===================== ATTENDANCE ===================== */
+async function markAttendance(timetableId, iso, status){
+  const uid = state.session.user.id;
+  const key = `${timetableId}_${iso}`;
+  const current = state.attendance[key];
+  const next = current === status ? undefined : status; // tap same = clear
+
+  if(next === undefined){
+    const { error } = await sb.from("attendance").delete().eq("timetable_id", timetableId).eq("lecture_date", iso);
+    if(error){ toast("Couldn't update: "+error.message); return; }
+    delete state.attendance[key];
+  } else {
+    const { error } = await sb.from("attendance").upsert({
+      user_id:uid, timetable_id:timetableId, lecture_date: iso, status: next
+    }, { onConflict: "timetable_id,lecture_date" });
+    if(error){ toast("Couldn't save: "+error.message); return; }
+    state.attendance[key] = next;
+  }
+  render();
+}
+
+/* ===================== STATS ===================== */
+function computeStats(){
+  const bySubject = {};
+  state.subjects.forEach(s => bySubject[s.id] = { code:s.code, name:s.name, held:0, present:0 });
+  const byTimetable = {};
+  state.timetable.forEach(t => byTimetable[t.id] = t.subject_id);
+  Object.entries(state.attendance).forEach(([key, status]) => {
+    const timetableId = key.split("_")[0];
+    const subjectId = byTimetable[timetableId];
+    if(!subjectId || !bySubject[subjectId]) return;
+    bySubject[subjectId].held += 1;
+    if(status === "P") bySubject[subjectId].present += 1;
+  });
+  let totalHeld=0, totalPresent=0;
+  Object.values(bySubject).forEach(s => { totalHeld+=s.held; totalPresent+=s.present; });
+  return { bySubject, totalHeld, totalPresent };
+}
+
+/* ===================== RENDER: SHELL ===================== */
+function render(){
+  if(!state.session){
+    root.innerHTML = state.view === "auth-signup" ? renderSignup() : renderLogin();
+    bindAuthEvents();
+    return;
+  }
+  let body = "";
+  if(state.view === "setup") body = renderSetup();
+  else if(state.view === "dashboard") body = renderDashboard();
+  else if(state.view === "week") body = renderWeek();
+  else if(state.view === "calendar") body = renderCalendar();
+  else if(state.view === "subjects") body = renderSubjects();
+  else if(state.view === "settings") body = renderSettings();
+
+  root.innerHTML = `
+    <header class="top">
+      <div class="kicker">COLLEGE ATTENDANCE</div>
+      <h1 class="serif">${state.profile ? escapeHtml(state.profile.full_name || state.profile.username) : ""}</h1>
+      <div class="sub">${state.profile ? escapeHtml(state.profile.course||"") + (state.profile.semester ? " · Sem "+escapeHtml(state.profile.semester) : "") : ""}</div>
+    </header>
+    ${body}
+    ${state.view!=="setup" ? renderTabs() : ""}
+  `;
+  bindAppEvents();
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function renderTabs(){
+  const tabs = [
+    {id:"dashboard", ic:"◆", label:"Home"},
+    {id:"week", ic:"▦", label:"Week"},
+    {id:"calendar", ic:"▤", label:"Calendar"},
+    {id:"subjects", ic:"§", label:"Subjects"},
+    {id:"settings", ic:"⚙", label:"Settings"},
+  ];
+  return `<nav class="tabs">${tabs.map(t=>`
+    <button data-tab="${t.id}" class="${state.view===t.id?"active":""}">
+      <span class="ic">${t.ic}</span><span>${t.label}</span>
+    </button>`).join("")}</nav>`;
+}
+
+/* ===================== RENDER: AUTH ===================== */
+function renderLogin(){
+  return `
+  <header class="top">
+    <div class="kicker">COLLEGE ATTENDANCE</div>
+    <h1 class="serif">Welcome back</h1>
+    <div class="sub">Log in to your attendance register</div>
+  </header>
+  <div class="wrap">
+    <div class="card">
+      <div class="field"><label>Username</label><input id="f-username" autocapitalize="none" autocomplete="username" /></div>
+      <div class="field"><label>Password</label><input id="f-password" type="password" autocomplete="current-password" /></div>
+      ${state.authError ? `<div class="err">${escapeHtml(state.authError)}</div>` : ""}
+      <button id="btn-login" class="btn btn-primary btn-block" ${state.authBusy?"disabled":""}>${state.authBusy?"Logging in…":"Login"}</button>
+    </div>
+    <p class="center muted">No account yet? <a href="#" id="go-signup">Create one</a></p>
+  </div>`;
+}
+
+function renderSignup(){
+  return `
+  <header class="top">
+    <div class="kicker">COLLEGE ATTENDANCE</div>
+    <h1 class="serif">Create account</h1>
+    <div class="sub">Your own private attendance register</div>
+  </header>
+  <div class="wrap">
+    <div class="card">
+      <div class="field"><label>Full name</label><input id="f-fullname" /></div>
+      <div class="field"><label>Username</label><input id="f-username" autocapitalize="none" placeholder="letters, numbers, underscore" /></div>
+      <div class="field"><label>Password</label><input id="f-password" type="password" /></div>
+      <div class="field"><label>Confirm password</label><input id="f-confirm" type="password" /></div>
+      <div class="field"><label>College (optional)</label><input id="f-college" /></div>
+      <div class="row2">
+        <div class="field"><label>Course</label><input id="f-course" placeholder="BA LL.B (H)" /></div>
+        <div class="field"><label>Semester</label><input id="f-semester" placeholder="III" /></div>
+      </div>
+      ${state.authError ? `<div class="err">${escapeHtml(state.authError)}</div>` : ""}
+      <button id="btn-signup" class="btn btn-primary btn-block" ${state.authBusy?"disabled":""}>${state.authBusy?"Creating…":"Create account"}</button>
+    </div>
+    <p class="center muted">Already have an account? <a href="#" id="go-login">Log in</a></p>
+  </div>`;
+}
+
+function bindAuthEvents(){
+  document.getElementById("go-signup")?.addEventListener("click", e=>{e.preventDefault(); state.view="auth-signup"; state.authError=""; render();});
+  document.getElementById("go-login")?.addEventListener("click", e=>{e.preventDefault(); state.view="auth-login"; state.authError=""; render();});
+  document.getElementById("btn-login")?.addEventListener("click", ()=> doLogin({
+    username: document.getElementById("f-username").value,
+    password: document.getElementById("f-password").value,
+  }));
+  document.getElementById("btn-signup")?.addEventListener("click", ()=> doSignup({
+    username: document.getElementById("f-username").value,
+    password: document.getElementById("f-password").value,
+    confirm: document.getElementById("f-confirm").value,
+    full_name: document.getElementById("f-fullname").value,
+    college: document.getElementById("f-college").value,
+    course: document.getElementById("f-course").value,
+    semester: document.getElementById("f-semester").value,
+  }));
+}
+
+/* ===================== RENDER: SETUP ===================== */
+function renderSetup(){
+  const byDay = {};
+  DAY_NAMES.forEach(d=>byDay[d]=[]);
+  state.timetable.forEach(t=>byDay[t.day].push(t));
+
+  return `
+  <div class="wrap">
+    <div class="card center">
+      <div class="serif" style="font-size:18px; font-weight:700; margin-bottom:6px;">Set up your timetable</div>
+      <p class="muted">Add each lecture manually, or start from an example and edit it.</p>
+      <button id="btn-example" class="btn btn-gold">Use example BA LL.B(H) timetable</button>
+    </div>
+
+    ${DAY_NAMES.map(day=>`
+      <div class="card day-block">
+        <h4>${day}</h4>
+        ${byDay[day].map(t=>`
+          <div class="lec-chip">
+            <span>${escapeHtml(t.start_time)}${t.end_time?"–"+escapeHtml(t.end_time):""} · <b>${escapeHtml(t.subjects.code)}</b> ${escapeHtml(t.subjects.name)}</span>
+            <button class="rm" data-rm="${t.id}">remove</button>
+          </div>`).join("") || `<div class="muted" style="margin-bottom:8px;">No lectures yet</div>`}
+        <button class="btn btn-outline" data-addday="${day}">+ Add lecture</button>
+      </div>
+    `).join("")}
+
+    <button id="btn-finish-setup" class="btn btn-primary btn-block" ${state.timetable.length===0?"disabled":""}>
+      ${state.timetable.length===0 ? "Add at least one lecture to continue" : "Finish setup"}
+    </button>
+  </div>`;
+}
+
+function openAddLectureModal(day){
+  const bg = document.createElement("div");
+  bg.className = "modal-bg";
+  bg.innerHTML = `
+    <div class="modal">
+      <h3 class="serif">Add lecture — ${day}</h3>
+      <div class="field"><label>Subject name</label><input id="m-name" placeholder="Constitutional Law-II" /></div>
+      <div class="row2">
+        <div class="field"><label>Subject code</label><input id="m-code" placeholder="CL-II" /></div>
+        <div class="field"><label>Teacher (optional)</label><input id="m-teacher" /></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Start time</label><input id="m-start" type="time" /></div>
+        <div class="field"><label>End time (optional)</label><input id="m-end" type="time" /></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button id="m-cancel" class="btn btn-outline" style="flex:1;">Cancel</button>
+        <button id="m-save" class="btn btn-primary" style="flex:1;">Add</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector("#m-cancel").addEventListener("click", ()=>bg.remove());
+  bg.querySelector("#m-save").addEventListener("click", async ()=>{
+    const name = bg.querySelector("#m-name").value.trim();
+    const code = bg.querySelector("#m-code").value.trim();
+    const teacher = bg.querySelector("#m-teacher").value.trim();
+    const start = bg.querySelector("#m-start").value;
+    const end = bg.querySelector("#m-end").value;
+    if(!name || !code || !start){ toast("Subject name, code, and start time are required"); return; }
+    await addLecture(day, name, code, teacher, start, end);
+    bg.remove();
+  });
+}
+
+/* ===================== RENDER: DASHBOARD ===================== */
+function renderDashboard(){
+  const { bySubject, totalHeld, totalPresent } = computeStats();
+  const c = calc75(totalPresent, totalHeld);
+  const pctLabel = c.pct===null ? "—" : `${Math.round(c.pct*10)/10}%`;
+  const pillClass = c.pct===null ? "" : c.pct>=75 ? "ok" : c.pct>=65 ? "warn" : "bad";
+
+  let statusLine = "";
+  if(c.pct !== null){
+    if(c.pct >= 75) statusLine = `You can miss <b>${c.canMiss}</b> more lecture${c.canMiss===1?"":"s"} and stay at/above 75%.`;
+    else statusLine = `Attend the next <b>${c.needAttend}</b> lecture${c.needAttend===1?"":"s"} in a row to get back to 75%.`;
+  }
+
+  return `
+  <div class="wrap">
+    <div class="card center">
+      <div class="mono muted" style="letter-spacing:2px; font-size:10.5px;">OVERALL ATTENDANCE</div>
+      <div class="serif stat-big" style="color:${c.pct===null?"var(--muted)":c.pct>=75?"var(--present)":c.pct>=65?"var(--gold)":"var(--absent)"}">${pctLabel}</div>
+      <div class="muted">${totalPresent} present of ${totalHeld} lectures marked</div>
+      ${c.pct!==null ? `<div style="margin-top:8px;"><span class="pill ${pillClass}">${c.pct>=75?"On track":"Below 75%"}</span></div>` : ""}
+      ${statusLine ? `<p style="font-size:13px; margin-top:12px;">${statusLine}</p>` : `<p class="muted" style="margin-top:12px;">Mark a few lectures on the Week tab to see your stats.</p>`}
+    </div>
+
+    <div class="card">
+      <div class="serif" style="font-weight:700; margin-bottom:8px;">Subjects at a glance</div>
+      ${Object.values(bySubject).map(s=>{
+        const pct = s.held===0 ? null : Math.round((s.present/s.held)*1000)/10;
+        const color = pct===null ? "var(--muted)" : pct>=75 ? "var(--present)" : pct>=65 ? "var(--gold)" : "var(--absent)";
+        return `<div class="subj-row">
+          <div><div class="subj-name">${escapeHtml(s.code)}</div><div class="subj-sub">${escapeHtml(s.name)}</div></div>
+          <div class="subj-pct mono" style="color:${color}">${pct===null?"—":pct+"%"}</div>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+/* ===================== RENDER: WEEK ===================== */
 function renderWeek(){
- let m=mon(viewDate), dates=days.map((_,i)=>{let d=new Date(m);d.setDate(m.getDate()+i);return d});
- document.getElementById("weekTitle").textContent=`Week: ${short(dates[0])} – ${short(dates[4])} ${dates[4].getFullYear()}`;
- let h='<div class="cell th">TIME</div>';dates.forEach((d,i)=>h+=`<div class="cell th">${days[i]}<small>${short(d)}</small></div>`);
- times.forEach(t=>{h+=`<div class="cell time">${t}</div>`;days.forEach((day,i)=>{let d=dates[i],c=schedule[day][t];if(!c){h+='<div class="cell"><div class="empty">—</div></div>';return}let s=get(d,t);h+=`<div class="cell"><div class="code">${c}</div><div class="name">${names[c]}</div><div class="actions"><button class="p ${s==="P"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','P')">✓ P</button><button class="a ${s==="A"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','A')">✕ A</button></div></div>`})});
- document.getElementById("weekGrid").innerHTML=h;
+  const dates = DAY_NAMES.map((_,i)=>addDays(state.weekStart,i));
+  const today = todayMid();
+  const rangeLabel = `${fmtShort(dates[0])} – ${fmtShort(dates[4])}, ${dates[4].getFullYear()}`;
+
+  const byDay = {};
+  DAY_NAMES.forEach(d=>byDay[d]=[]);
+  state.timetable.forEach(t=>byDay[t.day].push(t));
+  const maxRows = Math.max(1, ...DAY_NAMES.map(d=>byDay[d].length));
+
+  let rows = "";
+  for(let r=0; r<maxRows; r++){
+    rows += "<tr>";
+    rows += `<td class="timecol">${r===0?"":""}</td>`;
+    DAY_NAMES.forEach((day,i)=>{
+      const t = byDay[day][r];
+      const d = dates[i];
+      const isToday = sameDate(d, today);
+      if(!t){ rows += `<td class="lec ${isToday?"today":""}"></td>`; return; }
+      const iso = toISO(d);
+      const status = state.attendance[`${t.id}_${iso}`];
+      const future = d > today;
+      rows += `<td class="lec ${isToday?"today":""}">
+        <div style="font-weight:600;">${escapeHtml(t.subjects.code)}</div>
+        <div class="muted" style="font-size:9px;">${escapeHtml(t.start_time)}</div>
+        <button class="stamp-btn ${status==='P'?'present':''}" ${future?"disabled":""} data-mark="${t.id}|${iso}|P">P</button>
+        <button class="stamp-btn ${status==='A'?'absent':''}" ${future?"disabled":""} data-mark="${t.id}|${iso}|A" style="margin-top:3px;">A</button>
+      </td>`;
+    });
+    rows += "</tr>";
+  }
+
+  return `
+  <div class="wrap">
+    <div class="weeknav">
+      <button data-week="-1">‹</button>
+      <div class="center">
+        <div class="serif" style="font-weight:600; font-size:14px;">${rangeLabel}</div>
+        <button data-week="0" class="btn-outline" style="border:none; background:none; text-decoration:underline; font-size:11px; color:var(--gold); padding:2px;">jump to today</button>
+      </div>
+      <button data-week="1">›</button>
+    </div>
+    <div class="grid-wrap">
+      <table>
+        <thead><tr>
+          <th></th>
+          ${DAY_NAMES.map((d,i)=>`<th>${d.slice(0,3)}<br><span class="mono" style="font-size:9px;">${fmtShort(dates[i])}</span></th>`).join("")}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p class="muted center" style="margin-top:10px;">Tap P for Present, A for Absent. Tap again to clear.</p>
+  </div>`;
 }
+
+/* ===================== RENDER: CALENDAR ===================== */
 function renderCalendar(){
- const y=monthDate.getFullYear(),m=monthDate.getMonth(), first=new Date(y,m,1), last=new Date(y,m+1,0);
- document.getElementById("monthTitle").textContent=monthDate.toLocaleDateString("en-IN",{month:"long",year:"numeric"});
- let h=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x=>`<div class="dow">${x}</div>`).join("");
- let start=(first.getDay()+6)%7, total=Math.ceil((start+last.getDate())/7)*7;
- for(let i=0;i<total;i++){let n=i-start+1,d=new Date(y,m,n),inside=n>=1&&n<=last.getDate();if(!inside){h+=`<div class="day muted"></div>`;continue}
-  let rec=allRecords().filter(x=>dateKey(x.d)===dateKey(d)),p=rec.filter(x=>x.v==="P").length,a=rec.filter(x=>x.v==="A").length,t=p+a,cl=t?Math.round(p/t*100):null;
-  let cls="day";if(dateKey(d)===dateKey(new Date()))cls+=" today";if(dateKey(d)===dateKey(selectedDate))cls+=" selected";
-  h+=`<div class="${cls}" onclick="selectDay(new Date(${y},${m},${n}))"><div class="num">${n}</div><div class="dots">${rec.map(x=>`<i class="dot ${x.v.toLowerCase()}"></i>`).join("")}</div>${t?`<div class="daypct">${p}/${t} • ${cl}%</div>`:""}</div>`;
- }
- document.getElementById("calendar").innerHTML=h;renderSelectedDay();
+  const month = state.calMonth;
+  const year = month.getFullYear(), mo = month.getMonth();
+  const first = new Date(year, mo, 1);
+  const startOffset = (first.getDay()+6)%7; // Monday=0
+  const daysInMonth = new Date(year, mo+1, 0).getDate();
+  const label = month.toLocaleDateString("en-IN",{month:"long", year:"numeric"});
+
+  const byDate = {}; // iso -> {p,a}
+  Object.entries(state.attendance).forEach(([key,status])=>{
+    const iso = key.split("_")[1];
+    if(!byDate[iso]) byDate[iso] = {p:0,a:0};
+    if(status==="P") byDate[iso].p++; else byDate[iso].a++;
+  });
+
+  const today = todayMid();
+  let cells = "";
+  for(let i=0;i<startOffset;i++) cells += `<div class="cal-cell empty"></div>`;
+  for(let day=1; day<=daysInMonth; day++){
+    const d = new Date(year,mo,day);
+    const iso = toISO(d);
+    const rec = byDate[iso];
+    const isToday = sameDate(d,today);
+    cells += `<div class="cal-cell ${isToday?"today":""}" data-day="${iso}">
+      <span>${day}</span>
+      ${rec?.p ? `<span class="cal-dot p"></span>`:""}${rec?.a ? `<span class="cal-dot a"></span>`:""}
+    </div>`;
+  }
+
+  return `
+  <div class="wrap">
+    <div class="weeknav">
+      <button data-month="-1">‹</button>
+      <div class="serif" style="font-weight:600;">${label}</div>
+      <button data-month="1">›</button>
+    </div>
+    <div class="card">
+      <div class="cal-grid" style="margin-bottom:6px;">
+        ${["M","T","W","T","F","S","S"].map(d=>`<div class="center muted" style="font-size:10px;">${d}</div>`).join("")}
+      </div>
+      <div class="cal-grid">${cells}</div>
+      <p class="muted center" style="margin-top:10px; font-size:11px;">
+        <span class="cal-dot p" style="position:static; display:inline-block;"></span> present &nbsp;
+        <span class="cal-dot a" style="position:static; display:inline-block;"></span> absent
+      </p>
+    </div>
+    <div id="cal-day-detail"></div>
+  </div>`;
 }
-function selectDay(d){selectedDate=d;monthDate=new Date(d);renderCalendar()}
-function renderSelectedDay(){
- let d=selectedDate, day=days[d.getDay()-1], box=document.getElementById("selectedDay");
- if(!day){box.innerHTML="<b>Weekend</b><div class='small'>Your timetable has no Saturday/Sunday lectures.</div>";return}
- let h=`<div class="row"><b>${d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</b><span class="small">${day}</span></div><div style="margin-top:10px">`;
- times.forEach(t=>{let c=schedule[day][t];if(!c)return;let s=get(d,t);h+=`<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line)"><div><b>${t} • ${c}</b><div class="small">${names[c]}</div></div><div class="actions" style="margin:0;width:145px"><button class="p ${s==="P"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','P')">✓ Present</button><button class="a ${s==="A"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','A')">✕ Absent</button></div></div>`});
- box.innerHTML=h+"</div>";
+
+function renderDayDetail(iso){
+  const d = new Date(iso+"T00:00:00");
+  const dayName = DAY_NAMES[(d.getDay()+6)%7] || null;
+  const today = todayMid();
+  const future = d > today;
+  if(!dayName){
+    return `<div class="card"><div class="serif" style="font-weight:600;">${d.toLocaleDateString("en-IN",{weekday:"long", day:"numeric", month:"long"})}</div><p class="muted">No lectures scheduled (weekend).</p></div>`;
+  }
+  const lectures = state.timetable.filter(t=>t.day===dayName).sort((a,b)=>a.start_time.localeCompare(b.start_time));
+  return `
+  <div class="card">
+    <div class="serif" style="font-weight:600; margin-bottom:8px;">${d.toLocaleDateString("en-IN",{weekday:"long", day:"numeric", month:"long"})}</div>
+    ${lectures.length===0 ? `<p class="muted">No lectures scheduled.</p>` : lectures.map(t=>{
+      const status = state.attendance[`${t.id}_${iso}`];
+      return `<div class="subj-row">
+        <div><div class="subj-name">${escapeHtml(t.subjects.code)}</div><div class="subj-sub">${escapeHtml(t.start_time)} · ${escapeHtml(t.subjects.name)}</div></div>
+        <div style="display:flex; gap:6px;">
+          <button class="stamp-btn ${status==='P'?'present':''}" ${future?"disabled":""} data-mark="${t.id}|${iso}|P" style="width:44px;">P</button>
+          <button class="stamp-btn ${status==='A'?'absent':''}" ${future?"disabled":""} data-mark="${t.id}|${iso}|A" style="width:44px;">A</button>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
 }
+
+/* ===================== RENDER: SUBJECTS ===================== */
 function renderSubjects(){
- let h="";Object.entries(names).forEach(([c,n])=>{let s=stats(c), advice=attendanceAdvice(s);h+=`<div class="subject"><div><b>${c}</b><div class="small">${n}</div></div><div>${s.p} P</div><div>${s.a} A</div><div class="pct ${s.t?(s.pct<75?"bad":"good"):""}">${s.t?s.pct+"%":"—"}</div><div class="advice small">${s.t?advice:"No classes marked yet."}</div></div>`});document.getElementById("subjectList").innerHTML=h}
-function renderDailyList(){
- let m=mon(viewDate), h="";
- days.forEach((day,i)=>{
-   let d=new Date(m); d.setDate(m.getDate()+i);
-   h+=`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><b>${day}, ${short(d)}</b>`;
-   let found=false;
-   times.forEach(t=>{
-     let c=schedule[day][t]; if(!c)return;
-     found=true; let s=get(d,t);
-     h+=`<div class="row" style="padding:8px 0">
-       <div><b>${t}</b> &nbsp; <b>${c}</b><div class="small">${names[c]}</div></div>
-       <div class="actions" style="margin:0;width:145px">
-        <button class="p ${s==="P"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','P')">✓ Present</button>
-        <button class="a ${s==="A"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','A')">✕ Absent</button>
-       </div>
-     </div>`;
-   });
-   if(!found)h+=`<div class="small" style="padding-top:7px">No lectures</div>`;
-   h+="</div>";
- });
- document.getElementById("dailyList").innerHTML=h;
+  const { bySubject } = computeStats();
+  return `
+  <div class="wrap">
+    <div class="card">
+      <div class="serif" style="font-weight:700; margin-bottom:10px;">Subject-wise attendance</div>
+      ${Object.values(bySubject).length===0 ? `<p class="muted">No subjects yet — add lectures in Settings.</p>` : `
+      <table>
+        <thead><tr><th style="text-align:left;">Subject</th><th>Held</th><th>Present</th><th style="text-align:right;">%</th></tr></thead>
+        <tbody>
+          ${Object.values(bySubject).map(s=>{
+            const pct = s.held===0?null:Math.round((s.present/s.held)*1000)/10;
+            const color = pct===null?"var(--muted)":pct>=75?"var(--present)":pct>=65?"var(--gold)":"var(--absent)";
+            return `<tr>
+              <td><b>${escapeHtml(s.code)}</b><br><span class="muted" style="font-size:10px;">${escapeHtml(s.name)}</span></td>
+              <td class="center mono">${s.held}</td>
+              <td class="center mono">${s.present}</td>
+              <td style="text-align:right; font-weight:700; color:${color};" class="mono">${pct===null?"—":pct+"%"}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`}
+    </div>
+  </div>`;
 }
-function renderAll(){renderStats();renderWeek();renderDailyList();renderCalendar();renderSubjects();document.getElementById("overallTop").textContent=stats().pct+"%"}
-function showTab(t){["week","calendar","subjects"].forEach(x=>{document.getElementById(x+"Tab").classList.toggle("hidden",x!==t);document.getElementById("tab"+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle("active",x===t)})}
-function moveWeek(n){viewDate.setDate(viewDate.getDate()+n*7);showTab("week");renderWeek()}
-function goToday(){viewDate=new Date();selectedDate=new Date();monthDate=new Date();showTab("week");renderAll()}
-function moveMonth(n){monthDate.setMonth(monthDate.getMonth()+n);renderCalendar()}
-function exportBackup(){let blob=new Blob([JSON.stringify({version:2,attendance},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="college-attendance-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
-document.getElementById("importFile").addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);attendance=x.attendance||x;if(typeof attendance!=="object")throw 0;save();renderAll();alert("Attendance restored successfully.");}catch{alert("That backup file is not valid.")}};r.readAsText(f)});
-function resetAll(){if(confirm("Delete every attendance record? This cannot be undone unless you have a backup.")){attendance={};save();renderAll()}}
-renderAll();
+
+/* ===================== RENDER: SETTINGS ===================== */
+function renderSettings(){
+  const p = state.profile || {};
+  return `
+  <div class="wrap">
+    <div class="card">
+      <div class="serif" style="font-weight:700; margin-bottom:8px;">Profile</div>
+      <div class="muted">Username</div><div style="margin-bottom:8px;">${escapeHtml(p.username||"")}</div>
+      <div class="muted">Full name</div><div style="margin-bottom:8px;">${escapeHtml(p.full_name||"—")}</div>
+      <div class="muted">College</div><div style="margin-bottom:8px;">${escapeHtml(p.college||"—")}</div>
+      <div class="muted">Course / Semester</div><div>${escapeHtml(p.course||"—")} ${p.semester?"· Sem "+escapeHtml(p.semester):""}</div>
+    </div>
+    <div class="card">
+      <div class="serif" style="font-weight:700; margin-bottom:8px;">Timetable</div>
+      <p class="muted">Add or remove lectures.</p>
+      <button id="btn-edit-timetable" class="btn btn-outline btn-block">Edit timetable</button>
+    </div>
+    <button id="btn-logout" class="btn btn-danger btn-block">Log out</button>
+  </div>`;
+}
+
+/* ===================== EVENT BINDING ===================== */
+function bindAppEvents(){
+  document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click", ()=>{ state.view=b.dataset.tab; render(); }));
+
+  document.getElementById("btn-logout")?.addEventListener("click", doLogout);
+  document.getElementById("btn-example")?.addEventListener("click", useExampleTimetable);
+  document.getElementById("btn-finish-setup")?.addEventListener("click", ()=>{ state.view="dashboard"; render(); });
+  document.getElementById("btn-edit-timetable")?.addEventListener("click", ()=>{ state.view="setup"; render(); });
+
+  document.querySelectorAll("[data-addday]").forEach(b=>b.addEventListener("click", ()=>openAddLectureModal(b.dataset.addday)));
+  document.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click", ()=>removeLecture(b.dataset.rm)));
+
+  document.querySelectorAll("[data-mark]").forEach(b=>b.addEventListener("click", ()=>{
+    const [ttId, iso, status] = b.dataset.mark.split("|");
+    markAttendance(ttId, iso, status);
+  }));
+
+  document.querySelectorAll("[data-week]").forEach(b=>b.addEventListener("click", ()=>{
+    const v = b.dataset.week;
+    state.weekStart = v==="0" ? mondayOf(new Date()) : addDays(state.weekStart, 7*parseInt(v));
+    render();
+  }));
+
+  document.querySelectorAll("[data-month]").forEach(b=>b.addEventListener("click", ()=>{
+    const v = parseInt(b.dataset.month);
+    state.calMonth = new Date(state.calMonth.getFullYear(), state.calMonth.getMonth()+v, 1);
+    render();
+  }));
+
+  document.querySelectorAll("[data-day]").forEach(b=>b.addEventListener("click", ()=>{
+    document.getElementById("cal-day-detail").innerHTML = renderDayDetail(b.dataset.day);
+    document.querySelectorAll("#cal-day-detail [data-mark]").forEach(btn=>btn.addEventListener("click", ()=>{
+      const [ttId, iso, status] = btn.dataset.mark.split("|");
+      markAttendance(ttId, iso, status);
+    }));
+  }));
+}
+
+/* ===================== BOOT ===================== */
+(async function boot(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session){
+    state.session = session;
+    await loadEverything();
+    state.view = state.timetable.length===0 ? "setup" : "dashboard";
+  } else {
+    state.view = "auth-login";
+  }
+  render();
+})();
 </script>
 </body>
 </html>
