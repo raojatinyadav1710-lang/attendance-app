@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827"><link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>College Attendance</title>
+<style>
+*{box-sizing:border-box} :root{--bg:#f3f5f9;--card:#fff;--ink:#182230;--muted:#667085;--line:#e4e7ec;--blue:#4f46e5;--green:#087443;--red:#b42318;--amber:#b54708}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:#111827;color:#fff;padding:16px;position:sticky;top:0;z-index:20;box-shadow:0 2px 12px #0002}
+.head{max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-size:20px;margin:0}.subtitle{font-size:11px;color:#cbd5e1;margin-top:3px}
+.wrap{max-width:1200px;margin:auto;padding:12px}
+.tabs{display:flex;gap:6px;overflow:auto;margin-bottom:12px}.tab{background:#fff;border:1px solid var(--line);padding:9px 13px;border-radius:10px;white-space:nowrap;font-weight:700}.tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 12px}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button.danger{color:var(--red)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:13px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px}.stat b{font-size:21px;display:block}.stat span{font-size:11px;color:var(--muted)}.bar{height:7px;background:#eef0f3;border-radius:99px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;background:var(--blue)}
+.weekTitle{font-size:17px;font-weight:800;margin:3px 0 10px}.scroll{overflow:auto}.grid{min-width:1030px;display:grid;grid-template-columns:90px repeat(5,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}.cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:96px;padding:7px}.th{background:#f8fafc;min-height:62px;text-align:center;font-weight:800;position:sticky;top:0;z-index:4}.th small{display:block;color:var(--muted);font-weight:500;margin-top:3px}.time{text-align:center;background:#fafafa;color:var(--muted);font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;position:sticky;left:0;z-index:3}
+.code{font-weight:900;font-size:13px}.name{font-size:10px;color:var(--muted);line-height:1.2;margin-top:2px}.actions{display:flex;gap:5px;margin-top:8px}.actions button{padding:6px 4px;font-size:10px;flex:1}.p.on{background:#e9f8ef;color:var(--green);border-color:#b7e1c8;font-weight:800}.a.on{background:#fff0ee;color:var(--red);border-color:#f2c3bd;font-weight:800}.empty{text-align:center;color:#a0a7b2;padding-top:27px;font-size:12px}
+.calendarHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.calendarHead strong{font-size:18px}.cal{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}.dow,.day{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.dow{padding:8px;text-align:center;font-size:11px;color:var(--muted);font-weight:800;background:#fafafa}.day{min-height:78px;padding:6px;cursor:pointer}.day.muted{background:#fafafa;color:#b5bac3}.day.today{outline:2px solid var(--blue);outline-offset:-2px}.day.selected{background:#eef2ff}.num{font-weight:800;font-size:12px}.dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px}.dot{width:7px;height:7px;border-radius:50%}.dot.p{background:#16a34a}.dot.a{background:#dc2626}.daypct{font-size:10px;color:var(--muted);margin-top:5px}
+.subject{display:grid;grid-template-columns:1.5fr 70px 70px 80px 1.5fr;gap:7px;align-items:center;border-bottom:1px solid var(--line);padding:10px 0;font-size:12px}.subject:last-child{border-bottom:0}.pct{text-align:right;font-weight:900}.good{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--amber)}.small{font-size:11px;color:var(--muted)}
+.notice{padding:10px;border-radius:11px;background:#fff8e7;color:#8a4b08;border:1px solid #f6d28a;font-size:12px;margin-top:10px}
+.hidden{display:none!important}.row{display:flex;gap:8px;align-items:center;justify-content:space-between}.select{padding:9px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.footer{text-align:center;color:var(--muted);font-size:10px;padding:15px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.subject{grid-template-columns:1.4fr 45px 45px 60px}.subject .advice{grid-column:1/-1}.day{min-height:65px}.head{align-items:flex-start}.wrap{padding:9px}}
+</style>
+</head>
+<body>
+<header><div class="head"><div><h1>📚 My College Attendance</h1><div class="subtitle">BA-LL.B (H) • Semester III • Batch 2025–30</div></div><div id="overallTop"></div></div></header>
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab active" id="tabWeek" onclick="showTab('week')">Weekly Grid</button>
+    <button class="tab" id="tabCal" onclick="showTab('calendar')">📅 Calendar</button>
+    <button class="tab" id="tabSub" onclick="showTab('subjects')">📊 Subjects</button>
+  </div>
+
+  <section id="weekTab">
+    <div class="toolbar">
+      <button onclick="moveWeek(-1)">← Previous Week</button>
+      <button class="primary" onclick="goToday()">Today</button>
+      <button onclick="moveWeek(1)">Next Week →</button>
+      <button onclick="exportBackup()">Backup</button>
+      <button onclick="document.getElementById('importFile').click()">Restore</button>
+      <button class="danger" onclick="resetAll()">Reset</button>
+    </div>
+    <div id="weekTitle" class="weekTitle"></div>
+    <div id="stats" class="stats"></div>
+    <div class="card">
+      <div class="scroll"><div id="weekGrid" class="grid"></div></div>
+    </div>
+    <div class="card">
+      <div class="row"><b>📋 Daily Lecture List</b><span class="small">No horizontal scrolling needed</span></div>
+      <div id="dailyList"></div>
+    </div>
+  </section>
+
+  <section id="calendarTab" class="hidden">
+    <div class="card">
+      <div class="calendarHead">
+        <button onclick="moveMonth(-1)">←</button><strong id="monthTitle"></strong><button onclick="moveMonth(1)">→</button>
+      </div>
+      <div class="small" style="margin-bottom:9px">Tap any date to open that day's lectures. Past weeks remain saved.</div>
+      <div id="calendar" class="cal"></div>
+    </div>
+    <div class="card" id="selectedDay"></div>
+  </section>
+
+  <section id="subjectsTab" class="hidden">
+    <div class="card"><h2 style="margin:0 0 8px;font-size:17px">Subject-wise Attendance</h2><div class="notice" style="margin-bottom:10px">💡 <b>ECO-II — Economics-II</b> is scheduled at <b>9:10 AM</b> on Tuesday, Wednesday, Thursday and Friday.</div><div class="small">75% target is used for the warnings and “classes you can miss” calculation.</div><div id="subjectList"></div></div>
+  </section>
+
+  <div class="card">
+    <div class="row"><b>Overall attendance</b><b id="overallPct">0%</b></div>
+    <div class="bar"><i id="overallBar" style="width:0%"></i></div>
+    <div id="overallAdvice" class="notice hidden"></div>
+  </div>
+  <div class="footer">Attendance is stored locally on this device. Use Backup regularly if you change phones or clear browser data.</div>
+</div>
+<input id="importFile" type="file" accept=".json" class="hidden">
+
+<script>
+const schedule={
+Monday:{"10:10":"H-II","11:10":"CL-II","12:10":"LOCrime-I","2:10":"PS-II","3:10":"FL-I"},
+Tuesday:{"9:10":"ECO-II","10:10":"H-II","11:10":"CL-II","2:10":"PS-II","3:10":"FL-I"},
+Wednesday:{"9:10":"ECO-II","11:10":"CL-II","12:10":"LOCrime-I"},
+Thursday:{"9:10":"ECO-II","10:10":"H-II","12:10":"LOCrime-I","2:10":"PS-II","3:10":"FL-I"},
+Friday:{"9:10":"ECO-II","10:10":"H-II","11:10":"CL-II","12:10":"LOCrime-I","2:10":"PS-II","3:10":"FL-I"}
+};
+const names={"CL-II":"Constitutional Law-II","FL-I":"Family Law-I","PS-II":"Political Science-II","LOCrime-I":"Law of Crimes-I","H-II":"History-II","ECO-II":"Economics-II"};
+const times=["9:10","10:10","11:10","12:10","1:10","2:10","3:10","4:10"], days=["Monday","Tuesday","Wednesday","Thursday","Friday"];
+let attendance=JSON.parse(localStorage.getItem("collegeAttendanceV2")||"{}");
+let viewDate=new Date(), monthDate=new Date(), selectedDate=new Date();
+
+function pad(n){return String(n).padStart(2,"0")}
+function key(d,t){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"|"+t}
+function dateKey(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function mon(d){let x=new Date(d);let n=x.getDay();x.setDate(x.getDate()+(n===0?-6:1-n));return x}
+function fmt(d){return d.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}
+function short(d){return d.toLocaleDateString("en-IN",{day:"2-digit",month:"short"})}
+function save(){localStorage.setItem("collegeAttendanceV2",JSON.stringify(attendance))}
+function get(d,t){return attendance[key(d,t)]||""}
+function set(d,t,v){let k=key(d,t);if(v)attendance[k]=v;else delete attendance[k];save();renderAll()}
+function allRecords(){
+ let r=[];
+ for(const [k,v] of Object.entries(attendance)){let [ds,t]=k.split("|"), [y,m,dd]=ds.split("-").map(Number), d=new Date(y,m-1,dd), day=days[d.getDay()-1]; if(day&&schedule[day]?.[t]&&(v==="P"||v==="A"))r.push({d,t,code:schedule[day][t],v})}
+ return r
+}
+function stats(code){
+ let r=allRecords().filter(x=>!code||x.code===code),p=r.filter(x=>x.v==="P").length,a=r.filter(x=>x.v==="A").length,t=p+a;
+ return {p,a,t,pct:t?Math.round(p/t*100):0}
+}
+function attendanceAdvice(s){
+ if(!s.t)return "No attendance marked yet.";
+ if(s.pct>=75){let can=Math.floor(s.p/0.75-s.t);return `You can miss about <b>${Math.max(0,can)}</b> more class${can===1?"":"es"} and still remain at or above 75%, assuming no additional classes are attended in between.`}
+ let need=Math.ceil((0.75*s.t-s.p)/0.25); return `You are below 75%. You need to attend the next <b>${Math.max(0,need)}</b> consecutive classes (without another absence) to reach 75%.`;
+}
+function renderStats(){
+ let s=stats(); document.getElementById("stats").innerHTML=`<div class="stat"><b>${s.p}</b><span>Present</span></div><div class="stat"><b>${s.a}</b><span>Absent</span></div><div class="stat"><b>${s.t}</b><span>Total marked</span></div><div class="stat"><b>${s.pct}%</b><span>Overall</span><div class="bar"><i style="width:${s.pct}%"></i></div></div>`;
+ document.getElementById("overallPct").textContent=s.pct+"%";document.getElementById("overallBar").style.width=s.pct+"%";
+ let ad=document.getElementById("overallAdvice");ad.innerHTML=attendanceAdvice(s);ad.classList.toggle("hidden",!s.t);
+}
+function renderWeek(){
+ let m=mon(viewDate), dates=days.map((_,i)=>{let d=new Date(m);d.setDate(m.getDate()+i);return d});
+ document.getElementById("weekTitle").textContent=`Week: ${short(dates[0])} – ${short(dates[4])} ${dates[4].getFullYear()}`;
+ let h='<div class="cell th">TIME</div>';dates.forEach((d,i)=>h+=`<div class="cell th">${days[i]}<small>${short(d)}</small></div>`);
+ times.forEach(t=>{h+=`<div class="cell time">${t}</div>`;days.forEach((day,i)=>{let d=dates[i],c=schedule[day][t];if(!c){h+='<div class="cell"><div class="empty">—</div></div>';return}let s=get(d,t);h+=`<div class="cell"><div class="code">${c}</div><div class="name">${names[c]}</div><div class="actions"><button class="p ${s==="P"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','P')">✓ P</button><button class="a ${s==="A"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','A')">✕ A</button></div></div>`})});
+ document.getElementById("weekGrid").innerHTML=h;
+}
+function renderCalendar(){
+ const y=monthDate.getFullYear(),m=monthDate.getMonth(), first=new Date(y,m,1), last=new Date(y,m+1,0);
+ document.getElementById("monthTitle").textContent=monthDate.toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+ let h=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x=>`<div class="dow">${x}</div>`).join("");
+ let start=(first.getDay()+6)%7, total=Math.ceil((start+last.getDate())/7)*7;
+ for(let i=0;i<total;i++){let n=i-start+1,d=new Date(y,m,n),inside=n>=1&&n<=last.getDate();if(!inside){h+=`<div class="day muted"></div>`;continue}
+  let rec=allRecords().filter(x=>dateKey(x.d)===dateKey(d)),p=rec.filter(x=>x.v==="P").length,a=rec.filter(x=>x.v==="A").length,t=p+a,cl=t?Math.round(p/t*100):null;
+  let cls="day";if(dateKey(d)===dateKey(new Date()))cls+=" today";if(dateKey(d)===dateKey(selectedDate))cls+=" selected";
+  h+=`<div class="${cls}" onclick="selectDay(new Date(${y},${m},${n}))"><div class="num">${n}</div><div class="dots">${rec.map(x=>`<i class="dot ${x.v.toLowerCase()}"></i>`).join("")}</div>${t?`<div class="daypct">${p}/${t} • ${cl}%</div>`:""}</div>`;
+ }
+ document.getElementById("calendar").innerHTML=h;renderSelectedDay();
+}
+function selectDay(d){selectedDate=d;monthDate=new Date(d);renderCalendar()}
+function renderSelectedDay(){
+ let d=selectedDate, day=days[d.getDay()-1], box=document.getElementById("selectedDay");
+ if(!day){box.innerHTML="<b>Weekend</b><div class='small'>Your timetable has no Saturday/Sunday lectures.</div>";return}
+ let h=`<div class="row"><b>${d.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</b><span class="small">${day}</span></div><div style="margin-top:10px">`;
+ times.forEach(t=>{let c=schedule[day][t];if(!c)return;let s=get(d,t);h+=`<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line)"><div><b>${t} • ${c}</b><div class="small">${names[c]}</div></div><div class="actions" style="margin:0;width:145px"><button class="p ${s==="P"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','P')">✓ Present</button><button class="a ${s==="A"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','A')">✕ Absent</button></div></div>`});
+ box.innerHTML=h+"</div>";
+}
+function renderSubjects(){
+ let h="";Object.entries(names).forEach(([c,n])=>{let s=stats(c), advice=attendanceAdvice(s);h+=`<div class="subject"><div><b>${c}</b><div class="small">${n}</div></div><div>${s.p} P</div><div>${s.a} A</div><div class="pct ${s.t?(s.pct<75?"bad":"good"):""}">${s.t?s.pct+"%":"—"}</div><div class="advice small">${s.t?advice:"No classes marked yet."}</div></div>`});document.getElementById("subjectList").innerHTML=h}
+function renderDailyList(){
+ let m=mon(viewDate), h="";
+ days.forEach((day,i)=>{
+   let d=new Date(m); d.setDate(m.getDate()+i);
+   h+=`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><b>${day}, ${short(d)}</b>`;
+   let found=false;
+   times.forEach(t=>{
+     let c=schedule[day][t]; if(!c)return;
+     found=true; let s=get(d,t);
+     h+=`<div class="row" style="padding:8px 0">
+       <div><b>${t}</b> &nbsp; <b>${c}</b><div class="small">${names[c]}</div></div>
+       <div class="actions" style="margin:0;width:145px">
+        <button class="p ${s==="P"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','P')">✓ Present</button>
+        <button class="a ${s==="A"?"on":""}" onclick="set(new Date(${d.getFullYear()},${d.getMonth()},${d.getDate()}),'${t}','A')">✕ Absent</button>
+       </div>
+     </div>`;
+   });
+   if(!found)h+=`<div class="small" style="padding-top:7px">No lectures</div>`;
+   h+="</div>";
+ });
+ document.getElementById("dailyList").innerHTML=h;
+}
+function renderAll(){renderStats();renderWeek();renderDailyList();renderCalendar();renderSubjects();document.getElementById("overallTop").textContent=stats().pct+"%"}
+function showTab(t){["week","calendar","subjects"].forEach(x=>{document.getElementById(x+"Tab").classList.toggle("hidden",x!==t);document.getElementById("tab"+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle("active",x===t)})}
+function moveWeek(n){viewDate.setDate(viewDate.getDate()+n*7);showTab("week");renderWeek()}
+function goToday(){viewDate=new Date();selectedDate=new Date();monthDate=new Date();showTab("week");renderAll()}
+function moveMonth(n){monthDate.setMonth(monthDate.getMonth()+n);renderCalendar()}
+function exportBackup(){let blob=new Blob([JSON.stringify({version:2,attendance},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="college-attendance-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+document.getElementById("importFile").addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);attendance=x.attendance||x;if(typeof attendance!=="object")throw 0;save();renderAll();alert("Attendance restored successfully.");}catch{alert("That backup file is not valid.")}};r.readAsText(f)});
+function resetAll(){if(confirm("Delete every attendance record? This cannot be undone unless you have a backup.")){attendance={};save();renderAll()}}
+renderAll();
+</script>
+</body>
+</html>
