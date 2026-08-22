@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>College Attendance</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#1F3D33" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#1F3D33; --paper:#F4EEE1; --card:#F8F3E7; --card2:#F1E7CB;
+    --rule:#D9CDA8; --rule2:#C7B98C; --muted:#7C6A46; --muted2:#5B4D34;
+    --gold:#A9852F; --present:#146B5A; --absent:#8C2F3B; --today:#E9DCB6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Work Sans',sans-serif; background:var(--paper); color:var(--ink);
+    min-height:100vh; padding-bottom:70px;
+  }
+  .serif{font-family:'Fraunces',serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  button{font-family:inherit; cursor:pointer;}
+  input,select{font-family:inherit; font-size:15px;}
+  a{color:var(--gold);}
+
+  header.top{
+    border-bottom:3px double var(--ink); padding:18px 16px 12px; text-align:center; background:var(--card);
+  }
+  header.top .kicker{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:2px; color:var(--muted);}
+  header.top h1{font-size:24px; margin:4px 0 2px;}
+  header.top .sub{font-size:12px; color:var(--muted2);}
+
+  .wrap{max-width:640px; margin:0 auto; padding:16px;}
+  .card{background:var(--card); border:1px solid var(--rule2); border-radius:10px; padding:18px 16px; margin-bottom:16px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:12px; color:var(--muted2); margin-bottom:4px; font-weight:600;}
+  .field input, .field select{
+    width:100%; padding:10px 12px; border:1px solid var(--rule2); border-radius:6px; background:var(--paper); color:var(--ink);
+  }
+  .btn{
+    display:inline-block; padding:11px 18px; border-radius:6px; border:none; font-size:14px; font-weight:600;
+  }
+  .btn-primary{background:var(--ink); color:var(--card);}
+  .btn-gold{background:var(--gold); color:var(--card);}
+  .btn-outline{background:transparent; border:1px solid var(--rule2); color:var(--muted2);}
+  .btn-danger{background:transparent; border:1px solid var(--absent); color:var(--absent);}
+  .btn-block{width:100%; text-align:center;}
+  .err{color:var(--absent); font-size:13px; margin:8px 0;}
+  .msg{color:var(--present); font-size:13px; margin:8px 0;}
+  .center{text-align:center;}
+  .muted{color:var(--muted); font-size:12.5px;}
+
+  nav.tabs{
+    position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--rule2);
+    display:flex; justify-content:space-around; padding:6px 2px calc(6px + env(safe-area-inset-bottom));
+    z-index:20;
+  }
+  nav.tabs button{
+    background:none; border:none; font-size:10.5px; color:var(--muted); display:flex; flex-direction:column;
+    align-items:center; gap:2px; padding:6px 4px; flex:1; border-radius:8px;
+  }
+  nav.tabs button.active{color:var(--ink); font-weight:700; background:var(--today);}
+  nav.tabs .ic{font-size:18px;}
+
+  table{border-collapse:collapse; width:100%;}
+  .grid-wrap{overflow-x:auto; border:1px solid var(--rule2); border-radius:10px; background:var(--card);}
+  th,td{border-bottom:1px solid var(--rule); padding:8px 6px; font-size:12px;}
+  th{background:transparent; color:var(--muted); font-weight:600; font-size:11px;}
+  td.timecol{white-space:nowrap; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); border-right:1px solid var(--rule);}
+  td.lec{text-align:center; min-width:92px; vertical-align:middle;}
+  td.lec.today{background:var(--today);}
+  .stamp-btn{
+    width:100%; margin-top:4px; padding:5px 2px; border-radius:4px; font-size:10px; font-weight:700; letter-spacing:.5px;
+    border:1.5px dashed var(--rule2); background:transparent; color:var(--rule2);
+  }
+  .stamp-btn.present{border:1.5px solid var(--present); color:var(--present); background:transparent;}
+  .stamp-btn.absent{border:1.5px solid var(--absent); color:var(--absent); background:transparent;}
+
+  .stat-big{font-size:44px; font-weight:700; margin:4px 0;}
+  .pill{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600;}
+  .pill.ok{background:#DCE9DE; color:var(--present);}
+  .pill.warn{background:#F1E1C6; color:var(--gold);}
+  .pill.bad{background:#F0D6D9; color:var(--absent);}
+
+  .subj-row{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--rule); padding:10px 0;}
+  .subj-row:last-child{border-bottom:none;}
+  .subj-name{font-size:13px; font-weight:600;}
+  .subj-sub{font-size:10.5px; color:var(--muted);}
+  .subj-pct{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px;}
+
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+  .cal-cell{
+    aspect-ratio:1; border:1px solid var(--rule); border-radius:6px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-size:11px; background:var(--card2); position:relative;
+  }
+  .cal-cell.today{outline:2px solid var(--gold);}
+  .cal-cell.empty{visibility:hidden;}
+  .cal-dot{width:5px; height:5px; border-radius:50%; position:absolute; bottom:4px;}
+  .cal-dot.p{background:var(--present); left:calc(50% - 7px);}
+  .cal-dot.a{background:var(--absent); left:calc(50% + 2px);}
+
+  .modal-bg{position:fixed; inset:0; background:rgba(31,61,51,0.45); display:flex; align-items:flex-end; z-index:50;}
+  .modal{background:var(--paper); width:100%; border-radius:16px 16px 0 0; padding:20px 16px 28px; max-height:85vh; overflow-y:auto;}
+  .modal h3{margin-top:0;}
+  .row2{display:flex; gap:8px;}
+  .row2 .field{flex:1;}
+
+  .day-block{margin-bottom:14px;}
+  .day-block h4{margin:0 0 6px; font-size:13px; color:var(--muted2);}
+  .lec-chip{
+    display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--rule2);
+    border-radius:8px; padding:8px 10px; margin-bottom:6px; font-size:12.5px;
+  }
+  .lec-chip .rm{color:var(--absent); font-size:11px; border:none; background:none;}
+
+  .weeknav{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .weeknav button{background:var(--card); border:1px solid var(--rule2); border-radius:6px; width:34px; height:34px; font-size:16px;}
+  .hide{display:none !important;}
+  #toast{
+    position:fixed; bottom:76px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--card);
+    padding:10px 16px; border-radius:8px; font-size:13px; z-index:60; max-width:90vw; text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div id="toast" class="hide"></div>
+<div id="root"></div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const SUPABASE_URL = "https://yfszgpmljcymboefclvm.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_q40P2U2YuhDC8uZBLp-TZQ_t7Tiw0DC";
+const EMAIL_DOMAIN = "mailinator.com"; // placeholder only — a real, valid mail domain with no private inboxes, so no real person is ever affected even if mail were sent
+const DAY_NAMES = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const root = document.getElementById("root");
+
+/* ===================== STATE ===================== */
+let state = {
+  view: "loading", // loading | auth-login | auth-signup | setup | dashboard | week | calendar | subjects | settings | scan-review
+  session: null,
+  profile: null,
+  subjects: [],
+  timetable: [],       // {id, day, start_time, end_time, subject_id, subjects:{name,code,teacher}}
+  attendance: {},       // key `${timetable_id}_${iso}` -> 'P' | 'A'
+  weekStart: mondayOf(new Date()),
+  calMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  authError: "",
+  authBusy: false,
+  scanBusy: false,
+  scanError: "",
+  scanResult: null, // { Monday:[{code,name,teacher,start,end}], ... }
+};
+
+function toast(msg, ms=2200){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.remove("hide");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.add("hide"), ms);
+}
+
+/* ===================== DATE HELPERS ===================== */
+function toISO(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0"); return `${y}-${m}-${day}`; }
+function mondayOf(d){ const date=new Date(d); const dow=date.getDay(); const diff = dow===0 ? -6 : 1-dow; date.setDate(date.getDate()+diff); date.setHours(0,0,0,0); return date; }
+function addDays(d,n){ const date=new Date(d); date.setDate(date.getDate()+n); return date; }
+function fmtShort(d){ return d.toLocaleDateString("en-IN",{day:"numeric", month:"short"}); }
+function sameDate(a,b){ return toISO(a)===toISO(b); }
+function todayMid(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+
+/* ===================== 75% MATH ===================== */
+function calc75(present, total){
+  if(total===0) return {pct:null, canMiss:null, needAttend:null};
+  const pct = (present/total)*100;
+  if(pct >= 75){
+    const canMiss = Math.max(0, Math.floor(present/0.75 - total));
+    return {pct, canMiss, needAttend:0};
+  } else {
+    const needAttend = Math.max(0, Math.ceil((0.75*total - present)/0.25));
+    return {pct, canMiss:0, needAttend};
+  }
+}
+
+/* ===================== AUTH ===================== */
+function usernameToEmail(u){ return `${u.trim().toLowerCase()}@${EMAIL_DOMAIN}`; }
+
+async function doSignup(fields){
+  state.authError = ""; state.authBusy = true; render();
+  const { username, password, confirm, full_name, college, course, semester } = fields;
+  if(!username || !password){ state.authError="Username and password are required."; state.authBusy=false; render(); return; }
+  if(password !== confirm){ state.authError="Passwords don't match."; state.authBusy=false; render(); return; }
+  if(password.length < 6){ state.authError="Password should be at least 6 characters."; state.authBusy=false; render(); return; }
+  if(!/^[a-zA-Z0-9_]{3,20}$/.test(username)){ state.authError="Username: 3-20 letters, numbers, or underscore only."; state.authBusy=false; render(); return; }
+
+  const email = usernameToEmail(username);
+  const { data, error } = await sb.auth.signUp({
+    email, password,
+    options:{ data:{ username: username.trim(), full_name: full_name||"", college: college||"", course: course||"", semester: semester||"" } }
+  });
+  state.authBusy = false;
+  if(error){
+    if(String(error.message).toLowerCase().includes("already")) state.authError="That username is already taken.";
+    else state.authError = error.message;
+    render(); return;
+  }
+  if(!data.session){
+    state.authError = "Account created, but email confirmation is still ON in Supabase — turn it off (Authentication > Settings) then log in.";
+    render(); return;
+  }
+  await afterLogin(data.session);
+}
+
+async function doLogin(fields){
+  state.authError=""; state.authBusy=true; render();
+  const { username, password } = fields;
+  if(!username || !password){ state.authError="Enter your username and password."; state.authBusy=false; render(); return; }
+  const email = usernameToEmail(username);
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  state.authBusy=false;
+  if(error){ state.authError="Incorrect username or password."; render(); return; }
+  await afterLogin(data.session);
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  state = { ...state, session:null, profile:null, subjects:[], timetable:[], attendance:{}, view:"auth-login" };
+  render();
+}
+
+async function afterLogin(session){
+  state.session = session;
+  await loadEverything();
+  state.view = state.timetable.length === 0 ? "setup" : "dashboard";
+  render();
+}
+
+/* ===================== DATA LOADING ===================== */
+async function loadEverything(){
+  const uid = state.session.user.id;
+  const { data: profile } = await sb.from("profiles").select("*").eq("id", uid).maybeSingle();
+  state.profile = profile;
+
+  const { data: subjects } = await sb.from("subjects").select("*").eq("user_id", uid).order("created_at");
+  state.subjects = subjects || [];
+
+  const { data: timetable } = await sb.from("timetable").select("*, subjects(name,code,teacher)").eq("user_id", uid);
+  state.timetable = (timetable||[]).sort((a,b)=> a.start_time.localeCompare(b.start_time));
+
+  const { data: attendance } = await sb.from("attendance").select("*").eq("user_id", uid);
+  const map = {};
+  (attendance||[]).forEach(r => { map[`${r.timetable_id}_${r.lecture_date}`] = r.status; });
+  state.attendance = map;
+}
+
+/* ===================== TIMETABLE SETUP / EDIT ===================== */
+async function addLecture(day, subjName, subjCode, teacher, startTime, endTime){
+  const uid = state.session.user.id;
+  let subject = state.subjects.find(s => s.code.toLowerCase() === subjCode.trim().toLowerCase());
+  if(!subject){
+    const { data, error } = await sb.from("subjects").insert({ user_id:uid, name:subjName.trim(), code:subjCode.trim(), teacher:teacher.trim()||null }).select().single();
+    if(error){ toast("Couldn't add subject: "+error.message); return; }
+    subject = data;
+    state.subjects.push(subject);
+  }
+  const { data: tt, error: e2 } = await sb.from("timetable").insert({
+    user_id:uid, subject_id:subject.id, day, start_time:startTime, end_time:endTime||null
+  }).select("*, subjects(name,code,teacher)").single();
+  if(e2){ toast("Couldn't add lecture: "+e2.message); return; }
+  state.timetable.push(tt);
+  state.timetable.sort((a,b)=> a.start_time.localeCompare(b.start_time));
+  render();
+}
+
+async function removeLecture(id){
+  const { error } = await sb.from("timetable").delete().eq("id", id);
+  if(error){ toast("Couldn't remove: "+error.message); return; }
+  state.timetable = state.timetable.filter(t => t.id !== id);
+  render();
+}
+
+async function useExampleTimetable(){
+  const uid = state.session.user.id;
+  const SCHEDULE = {
+    Monday:[["H-II","History-II","Sharma","10:10","11:10"],["CL-II","Constitutional Law-II","Mishra","11:10","12:10"],["LOCrime-I","Law of Crimes-I","Sisodia","12:10","13:10"],["PS-II","Political Science-II","Rastogi","14:10","15:10"],["FL-I","Family Law-I","Pooja","15:10","16:10"]],
+    Tuesday:[["ECO-II","Economics-II","Singh","09:10","10:10"],["H-II","History-II","Sharma","10:10","11:10"],["CL-II","Constitutional Law-II","Mishra","11:10","12:10"],["PS-II","Political Science-II","Rastogi","14:10","15:10"],["FL-I","Family Law-I","Pooja","15:10","16:10"]],
+    Wednesday:[["ECO-II","Economics-II","Singh","09:10","10:10"],["CL-II","Constitutional Law-II","Mishra","11:10","12:10"],["LOCrime-I","Law of Crimes-I","Sisodia","12:10","13:10"]],
+    Thursday:[["ECO-II","Economics-II","Singh","09:10","10:10"],["H-II","History-II","Sharma","10:10","11:10"],["LOCrime-I","Law of Crimes-I","Sisodia","12:10","13:10"],["PS-II","Political Science-II","Rastogi","14:10","15:10"],["FL-I","Family Law-I","Pooja","15:10","16:10"]],
+    Friday:[["ECO-II","Economics-II","Singh","09:10","10:10"],["H-II","History-II","Sharma","10:10","11:10"],["CL-II","Constitutional Law-II","Mishra","11:10","12:10"],["LOCrime-I","Law of Crimes-I","Sisodia","12:10","13:10"],["PS-II","Political Science-II","Rastogi","14:10","15:10"],["FL-I","Family Law-I","Pooja","15:10","16:10"]],
+  };
+  toast("Adding example timetable…");
+  for(const day of DAY_NAMES){
+    for(const [code,name,teacher,start,end] of SCHEDULE[day]){
+      await addLecture(day, name, code, teacher, start, end);
+    }
+  }
+  toast("Example timetable added");
+}
+
+/* ===================== PHOTO SCAN (AI timetable extraction) ===================== */
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function scanTimetablePhoto(file){
+  state.scanError = ""; state.scanBusy = true; render();
+  try{
+    const base64 = await fileToBase64(file);
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/scan-timetable`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${state.session.access_token}`,
+        "apikey": SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ image: base64, mimeType: file.type || "image/jpeg" }),
+    });
+    const data = await res.json();
+    if(!res.ok || data.error){
+      state.scanError = "Couldn't read that photo clearly. Try a straighter, well-lit shot, or set it up manually below.";
+      state.scanBusy = false; render(); return;
+    }
+    const days = data.days || {};
+    DAY_NAMES.forEach(d => { if(!Array.isArray(days[d])) days[d] = []; });
+    state.scanResult = days;
+    state.scanBusy = false;
+    state.view = "scan-review";
+    render();
+  } catch(e){
+    state.scanError = "Something went wrong reading the photo. Try again or set it up manually.";
+    state.scanBusy = false; render();
+  }
+}
+
+async function confirmScanResult(){
+  if(!state.scanResult) return;
+  toast("Saving your timetable…");
+  for(const day of DAY_NAMES){
+    for(const lec of state.scanResult[day]){
+      if(!lec.name || !lec.code || !lec.start) continue;
+      await addLecture(day, lec.name, lec.code, lec.teacher||"", lec.start, lec.end||"");
+    }
+  }
+  state.scanResult = null;
+  state.view = "setup";
+  toast("Timetable saved — review it below");
+  render();
+}
+
+/* ===================== ATTENDANCE ===================== */
+async function markAttendance(timetableId, iso, status){
+  const uid = state.session.user.id;
+  const key = `${timetableId}_${iso}`;
+  const current = state.attendance[key];
+  const next = current === status ? undefined : status; // tap same = clear
+
+  if(next === undefined){
+    const { error } = await sb.from("attendance").delete().eq("timetable_id", timetableId).eq("lecture_date", iso);
+    if(error){ toast("Couldn't update: "+error.message); return; }
+    delete state.attendance[key];
+  } else {
+    const { error } = await sb.from("attendance").upsert({
+      user_id:uid, timetable_id:timetableId, lecture_date: iso, status: next
+    }, { onConflict: "timetable_id,lecture_date" });
+    if(error){ toast("Couldn't save: "+error.message); return; }
+    state.attendance[key] = next;
+  }
+  render();
+}
+
+/* ===================== STATS ===================== */
+function computeStats(){
+  const bySubject = {};
+  state.subjects.forEach(s => bySubject[s.id] = { code:s.code, name:s.name, held:0, present:0 });
+  const byTimetable = {};
+  state.timetable.forEach(t => byTimetable[t.id] = t.subject_id);
+  Object.entries(state.attendance).forEach(([key, status]) => {
+    const timetableId = key.split("_")[0];
+    const subjectId = byTimetable[timetableId];
+    if(!subjectId || !bySubject[subjectId]) return;
+    bySubject[subjectId].held += 1;
+    if(status === "P") bySubject[subjectId].present += 1;
+  });
+  let totalHeld=0, totalPresent=0;
+  Object.values(bySubject).forEach(s => { totalHeld+=s.held; totalPresent+=s.present; });
+  return { bySubject, totalHeld, totalPresent };
+}
+
+/* ===================== RENDER: SHELL ===================== */
+function render(){
+  if(!state.session){
+    root.innerHTML = state.view === "auth-signup" ? renderSignup() : renderLogin();
+    bindAuthEvents();
+    return;
+  }
+  let body = "";
+  if(state.view === "setup") body = renderSetup();
+  else if(state.view === "scan-review") body = renderScanReview();
+  else if(state.view === "dashboard") body = renderDashboard();
+  else if(state.view === "week") body = renderWeek();
+  else if(state.view === "calendar") body = renderCalendar();
+  else if(state.view === "subjects") body = renderSubjects();
+  else if(state.view === "settings") body = renderSettings();
+
+  root.innerHTML = `
+    <header class="top">
+      <div class="kicker">COLLEGE ATTENDANCE</div>
+      <h1 class="serif">${state.profile ? escapeHtml(state.profile.full_name || state.profile.username) : ""}</h1>
+      <div class="sub">${state.profile ? escapeHtml(state.profile.course||"") + (state.profile.semester ? " · Sem "+escapeHtml(state.profile.semester) : "") : ""}</div>
+    </header>
+    ${body}
+    ${(state.view!=="setup" && state.view!=="scan-review") ? renderTabs() : ""}
+  `;
+  bindAppEvents();
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function renderTabs(){
+  const tabs = [
+    {id:"dashboard", ic:"◆", label:"Home"},
+    {id:"week", ic:"▦", label:"Week"},
+    {id:"calendar", ic:"▤", label:"Calendar"},
+    {id:"subjects", ic:"§", label:"Subjects"},
+    {id:"settings", ic:"⚙", label:"Settings"},
+  ];
+  return `<nav class="tabs">${tabs.map(t=>`
+    <button data-tab="${t.id}" class="${state.view===t.id?"active":""}">
+      <span class="ic">${t.ic}</span><span>${t.label}</span>
+    </button>`).join("")}</nav>`;
+}
+
+/* ===================== RENDER: AUTH ===================== */
+function renderLogin(){
+  return `
+  <header class="top">
+    <div class="kicker">COLLEGE ATTENDANCE</div>
+    <h1 class="serif">Welcome back</h1>
+    <div class="sub">Log in to your attendance register</div>
+  </header>
+  <div class="wrap">
+    <div class="card">
+      <div class="field"><label>Username</label><input id="f-username" autocapitalize="none" autocomplete="username" /></div>
+      <div class="field"><label>Password</label><input id="f-password" type="password" autocomplete="current-password" /></div>
+      ${state.authError ? `<div class="err">${escapeHtml(state.authError)}</div>` : ""}
+      <button id="btn-login" class="btn btn-primary btn-block" ${state.authBusy?"disabled":""}>${state.authBusy?"Logging in…":"Login"}</button>
+    </div>
+    <p class="center muted">No account yet? <a href="#" id="go-signup">Create one</a></p>
+  </div>`;
+}
+
+function renderSignup(){
+  return `
+  <header class="top">
+    <div class="kicker">COLLEGE ATTENDANCE</div>
+    <h1 class="serif">Create account</h1>
+    <div class="sub">Your own private attendance register</div>
+  </header>
+  <div class="wrap">
+    <div class="card">
+      <div class="field"><label>Full name</label><input id="f-fullname" /></div>
+      <div class="field"><label>Username</label><input id="f-username" autocapitalize="none" placeholder="letters, numbers, underscore" /></div>
+      <div class="field"><label>Password</label><input id="f-password" type="password" /></div>
+      <div class="field"><label>Confirm password</label><input id="f-confirm" type="password" /></div>
+      <div class="field"><label>College (optional)</label><input id="f-college" /></div>
+      <div class="row2">
+        <div class="field"><label>Course</label><input id="f-course" placeholder="BA LL.B (H)" /></div>
+        <div class="field"><label>Semester</label><input id="f-semester" placeholder="III" /></div>
+      </div>
+      ${state.authError ? `<div class="err">${escapeHtml(state.authError)}</div>` : ""}
+      <button id="btn-signup" class="btn btn-primary btn-block" ${state.authBusy?"disabled":""}>${state.authBusy?"Creating…":"Create account"}</button>
+    </div>
+    <p class="center muted">Already have an account? <a href="#" id="go-login">Log in</a></p>
+  </div>`;
+}
+
+function bindAuthEvents(){
+  document.getElementById("go-signup")?.addEventListener("click", e=>{e.preventDefault(); state.view="auth-signup"; state.authError=""; render();});
+  document.getElementById("go-login")?.addEventListener("click", e=>{e.preventDefault(); state.view="auth-login"; state.authError=""; render();});
+  document.getElementById("btn-login")?.addEventListener("click", ()=> doLogin({
+    username: document.getElementById("f-username").value,
+    password: document.getElementById("f-password").value,
+  }));
+  document.getElementById("btn-signup")?.addEventListener("click", ()=> doSignup({
+    username: document.getElementById("f-username").value,
+    password: document.getElementById("f-password").value,
+    confirm: document.getElementById("f-confirm").value,
+    full_name: document.getElementById("f-fullname").value,
+    college: document.getElementById("f-college").value,
+    course: document.getElementById("f-course").value,
+    semester: document.getElementById("f-semester").value,
+  }));
+}
+
+/* ===================== RENDER: SETUP ===================== */
+function renderSetup(){
+  const byDay = {};
+  DAY_NAMES.forEach(d=>byDay[d]=[]);
+  state.timetable.forEach(t=>byDay[t.day].push(t));
+
+  return `
+  <div class="wrap">
+    <div class="card center">
+      <div class="serif" style="font-size:18px; font-weight:700; margin-bottom:6px;">Set up your timetable</div>
+      <p class="muted">Upload a photo of your timetable and we'll read it for you — or start from an example, or add lectures manually below.</p>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none;" />
+      <button id="btn-scan-photo" class="btn btn-primary btn-block" style="margin-bottom:8px;" ${state.scanBusy?"disabled":""}>
+        ${state.scanBusy ? "Reading your timetable…" : "📸 Upload timetable photo"}
+      </button>
+      <button id="btn-example" class="btn btn-outline btn-block">Use example BA LL.B(H) timetable</button>
+      ${state.scanError ? `<div class="err" style="margin-top:10px;">${escapeHtml(state.scanError)}</div>` : ""}
+    </div>
+
+    ${DAY_NAMES.map(day=>`
+      <div class="card day-block">
+        <h4>${day}</h4>
+        ${byDay[day].map(t=>`
+          <div class="lec-chip">
+            <span>${escapeHtml(t.start_time)}${t.end_time?"–"+escapeHtml(t.end_time):""} · <b>${escapeHtml(t.subjects.code)}</b> ${escapeHtml(t.subjects.name)}</span>
+            <button class="rm" data-rm="${t.id}">remove</button>
+          </div>`).join("") || `<div class="muted" style="margin-bottom:8px;">No lectures yet</div>`}
+        <button class="btn btn-outline" data-addday="${day}">+ Add lecture</button>
+      </div>
+    `).join("")}
+
+    <button id="btn-finish-setup" class="btn btn-primary btn-block" ${state.timetable.length===0?"disabled":""}>
+      ${state.timetable.length===0 ? "Add at least one lecture to continue" : "Finish setup"}
+    </button>
+  </div>`;
+}
+
+/* ---- Scan review: editable preview of what the AI read from the photo ---- */
+function renderScanReview(){
+  const days = state.scanResult || {};
+  return `
+  <div class="wrap">
+    <div class="card center">
+      <div class="serif" style="font-size:18px; font-weight:700;">We found your timetable</div>
+      <p class="muted">Check everything below — fix anything that's wrong, remove what shouldn't be there, then confirm.</p>
+    </div>
+    ${DAY_NAMES.map(day=>`
+      <div class="card day-block">
+        <h4>${day}</h4>
+        ${(days[day]||[]).length===0 ? `<div class="muted" style="margin-bottom:8px;">No lectures found for ${day}</div>` : ""}
+        ${(days[day]||[]).map((lec,idx)=>`
+          <div class="lec-chip" style="flex-direction:column; align-items:stretch; gap:6px;">
+            <div class="row2">
+              <input data-scan="${day}|${idx}|name" value="${escapeHtml(lec.name||"")}" placeholder="Subject name" style="padding:6px 8px; border:1px solid var(--rule2); border-radius:5px; font-size:12.5px;" />
+              <input data-scan="${day}|${idx}|code" value="${escapeHtml(lec.code||"")}" placeholder="Code" style="padding:6px 8px; border:1px solid var(--rule2); border-radius:5px; font-size:12.5px; max-width:90px;" />
+            </div>
+            <div class="row2">
+              <input data-scan="${day}|${idx}|teacher" value="${escapeHtml(lec.teacher||"")}" placeholder="Teacher (optional)" style="padding:6px 8px; border:1px solid var(--rule2); border-radius:5px; font-size:12.5px;" />
+              <input data-scan="${day}|${idx}|start" type="time" value="${escapeHtml(lec.start||"")}" style="padding:6px 8px; border:1px solid var(--rule2); border-radius:5px; font-size:12.5px;" />
+              <input data-scan="${day}|${idx}|end" type="time" value="${escapeHtml(lec.end||"")}" style="padding:6px 8px; border:1px solid var(--rule2); border-radius:5px; font-size:12.5px;" />
+            </div>
+            <button class="rm" data-scanrm="${day}|${idx}" style="align-self:flex-end;">remove</button>
+          </div>`).join("")}
+      </div>
+    `).join("")}
+    <button id="btn-confirm-scan" class="btn btn-primary btn-block">Confirm &amp; save timetable</button>
+    <button id="btn-cancel-scan" class="btn btn-outline btn-block" style="margin-top:8px;">Cancel, go back</button>
+  </div>`;
+}
+
+function openAddLectureModal(day){
+  const bg = document.createElement("div");
+  bg.className = "modal-bg";
+  bg.innerHTML = `
+    <div class="modal">
+      <h3 class="serif">Add lecture — ${day}</h3>
+      <div class="field"><label>Subject name</label><input id="m-name" placeholder="Constitutional Law-II" /></div>
+      <div class="row2">
+        <div class="field"><label>Subject code</label><input id="m-code" placeholder="CL-II" /></div>
+        <div class="field"><label>Teacher (optional)</label><input id="m-teacher" /></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Start time</label><input id="m-start" type="time" /></div>
+        <div class="field"><label>End time (optional)</label><input id="m-end" type="time" /></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button id="m-cancel" class="btn btn-outline" style="flex:1;">Cancel</button>
+        <button id="m-save" class="btn btn-primary" style="flex:1;">Add</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector("#m-cancel").addEventListener("click", ()=>bg.remove());
+  bg.querySelector("#m-save").addEventListener("click", async ()=>{
+    const name = bg.querySelector("#m-name").value.trim();
+    const code = bg.querySelector("#m-code").value.trim();
+    const teacher = bg.querySelector("#m-teacher").value.trim();
+    const start = bg.querySelector("#m-start").value;
+    const end = bg.querySelector("#m-end").value;
+    if(!name || !code || !start){ toast("Subject name, code, and start time are required"); return; }
+    await addLecture(day, name, code, teacher, start, end);
+    bg.remove();
+  });
+}
+
+/* ===================== RENDER: DASHBOARD ===================== */
+function renderDashboard(){
+  const { bySubject, totalHeld, totalPresent } = computeStats();
+  const c = calc75(totalPresent, totalHeld);
+  const pctLabel = c.pct===null ? "—" : `${Math.round(c.pct*10)/10}%`;
+  const pillClass = c.pct===null ? "" : c.pct>=75 ? "ok" : c.pct>=65 ? "warn" : "bad";
+
+  let statusLine = "";
+  if(c.pct !== null){
+    if(c.pct >= 75) statusLine = `You can miss <b>${c.canMiss}</b> more lecture${c.canMiss===1?"":"s"} and stay at/above 75%.`;
+    else statusLine = `Attend the next <b>${c.needAttend}</b> lecture${c.needAttend===1?"":"s"} in a row to get back to 75%.`;
+  }
+
+  return `
+  <div class="wrap">
+    <div class="card center">
+      <div class="mono muted" style="letter-spacing:2px; font-size:10.5px;">OVERALL ATTENDANCE</div>
+      <div class="serif stat-big" style="color:${c.pct===null?"var(--muted)":c.pct>=75?"var(--present)":c.pct>=65?"var(--gold)":"var(--absent)"}">${pctLabel}</div>
+      <div class="muted">${totalPresent} present of ${totalHeld} lectures marked</div>
+      ${c.pct!==null ? `<div style="margin-top:8px;"><span class="pill ${pillClass}">${c.pct>=75?"On track":"Below 75%"}</span></div>` : ""}
+      ${statusLine ? `<p style="font-size:13px; margin-top:12px;">${statusLine}</p>` : `<p class="muted" style="margin-top:12px;">Mark a few lectures on the Week tab to see your stats.</p>`}
+    </div>
+
+    <div class="card">
+      <div class="serif" style="font-weight:700; margin-bottom:8px;">Subjects at a glance</div>
+      ${Object.values(bySubject).map(s=>{
+        const pct = s.held===0 ? null : Math.round((s.present/s.held)*1000)/10;
+        const color = pct===null ? "var(--muted)" : pct>=75 ? "var(--present)" : pct>=65 ? "var(--gold)" : "var(--absent)";
+        return `<div class="subj-row">
+          <div><div class="subj-name">${escapeHtml(s.code)}</div><div class="subj-sub">${escapeHtml(s.name)}</div></div>
+          <div class="subj-pct mono" style="color:${color}">${pct===null?"—":pct+"%"}</div>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+/* ===================== RENDER: WEEK ===================== */
+function renderWeek(){
+  const dates = DAY_NAMES.map((_,i)=>addDays(state.weekStart,i));
+  const today = todayMid();
+  const rangeLabel = `${fmtShort(dates[0])} – ${fmtShort(dates[4])}, ${dates[4].getFullYear()}`;
+
+  const byDay = {};
+  DAY_NAMES.forEach(d=>byDay[d]=[]);
+  state.timetable.forEach(t=>byDay[t.day].push(t));
+  const maxRows = Math.max(1, ...DAY_NAMES.map(d=>byDay[d].length));
+
+  let rows = "";
+  for(let r=0; r<maxRows; r++){
+    rows += "<tr>";
+    rows += `<td class="timecol">${r===0?"":""}</td>`;
+    DAY_NAMES.forEach((day,i)=>{
+      const t = byDay[day][r];
+      const d = dates[i];
+      const isToday = sameDate(d, today);
+      if(!t){ rows += `<td class="lec ${isToday?"today":""}"></td>`; return; }
+      const iso = toISO(d);
+      const status = state.attendance[`${t.id}_${iso}`];
+      const future = d > today;
+      rows += `<td class="lec ${isToday?"today":""}">
+        <div style="font-weight:600;">${escapeHtml(t.subjects.code)}</div>
+        <div class="muted" style="font-size:9px;">${escapeHtml(t.start_time)}</div>
+        <button class="stamp-btn ${status==='P'?'present':''}" ${future?"disabled":""} data-mark="${t.id}|${iso}|P">P</button>
+        <button class="stamp-btn ${status==='A'?'absent':''}" ${future?"disabled":""} data-mark="${t.id}|${iso}|A" style="margin-top:3px;">A</button>
+      </td>`;
+    });
+    rows += "</tr>";
+  }
+
+  return `
+  <div class="wrap">
+    <div class="weeknav">
+      <button data-week="-1">‹</button>
+      <div class="center">
+        <div class="serif" style="font-weight:600; font-size:14px;">${rangeLabel}</div>
+        <button data-week="0" class="btn-outline" style="border:none; background:none; text-decoration:underline; font-size:11px; color:var(--gold); padding:2px;">jump to today</button>
+      </div>
+      <button data-week="1">›</button>
+    </div>
+    <div class="grid-wrap">
+      <table>
+        <thead><tr>
+          <th></th>
+          ${DAY_NAMES.map((d,i)=>`<th>${d.slice(0,3)}<br><span class="mono" style="font-size:9px;">${fmtShort(dates[i])}</span></th>`).join("")}
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p class="muted center" style="margin-top:10px;">Tap P for Present, A for Absent. Tap again to clear.</p>
+  </div>`;
+}
+
+/* ===================== RENDER: CALENDAR ===================== */
+function renderCalendar(){
+  const month = state.calMonth;
+  const year = month.getFullYear(), mo = month.getMonth();
+  const first = new Date(year, mo, 1);
+  const startOffset = (first.getDay()+6)%7; // Monday=0
+  const daysInMonth = new Date(year, mo+1, 0).getDate();
+  const label = month.toLocaleDateString("en-IN",{month:"long", year:"numeric"});
+
+  const byDate = {}; // iso -> {p,a}
+  Object.entries(state.attendance).forEach(([key,status])=>{
+    const iso = key.split("_")[1];
+    if(!byDate[iso]) byDate[iso] = {p:0,a:0};
+    if(status==="P") byDate[iso].p++; else byDate[iso].a++;
+  });
+
+  const today = todayMid();
+  let cells = "";
+  for(let i=0;i<startOffset;i++) cells += `<div class="cal-cell empty"></div>`;
+  for(let day=1; day<=daysInMonth; day++){
+    const d = new Date(year,mo,day);
+    const iso = toISO(d);
+    const rec = byDate[iso];
+    const isToday = sameDate(d,today);
+    cells += `<div class="cal-cell ${isToday?"today":""}" data-day="${iso}">
+      <span>${day}</span>
+      ${rec?.p ? `<span class="cal-dot p"></span>`:""}${rec?.a ? `<span class="cal-dot a"></span>`:""}
+    </div>`;
+  }
+
+  return `
+  <div class="wrap">
+    <div class="weeknav">
+      <button data-month="-1">‹</button>
+      <div class="serif" style="font-weight:600;">${label}</div>
+      <button data-month="1">›</button>
+    </div>
+    <div class="card">
+      <div class="cal-grid" style="margin-bottom:6px;">
+        ${["M","T","W","T","F","S","S"].map(d=>`<div class="center muted" style="font-size:10px;">${d}</div>`).join("")}
+      </div>
+      <div class="cal-grid">${cells}</div>
+      <p class="muted center" style="margin-top:10px; font-size:11px;">
+        <span class="cal-dot p" style="position:static; display:inline-block;"></span> present &nbsp;
+        <span class="cal-dot a" style="position:static; display:inline-block;"></span> absent
+      </p>
+    </div>
+    <div id="cal-day-detail"></div>
+  </div>`;
+}
+
+function renderDayDetail(iso){
+  const d = new Date(iso+"T00:00:00");
+  const dayName = DAY_NAMES[(d.getDay()+6)%7] || null;
+  const today = todayMid();
+  const future = d > today;
+  if(!dayName){
+    return `<div class="card"><div class="serif" style="font-weight:600;">${d.toLocaleDateString("en-IN",{weekday:"long", day:"numeric", month:"long"})}</div><p class="muted">No lectures scheduled (weekend).</p></div>`;
+  }
+  const lectures = state.timetable.filter(t=>t.day===dayName).sort((a,b)=>a.start_time.localeCompare(b.start_time));
+  return `
+  <div class="card">
+    <div class="serif" style="font-weight:600; margin-bottom:8px;">${d.toLocaleDateString("en-IN",{weekday:"long", day:"numeric", month:"long"})}</div>
+    ${lectures.length===0 ? `<p class="muted">No lectures scheduled.</p>` : lectures.map(t=>{
+      const status = state.attendance[`${t.id}_${iso}`];
+      return `<div class="subj-row">
+        <div><div class="subj-name">${escapeHtml(t.subjects.code)}</div><div class="subj-sub">${escapeHtml(t.start_time)} · ${escapeHtml(t.subjects.name)}</div></div>
+        <div style="display:flex; gap:6px;">
+          <button class="stamp-btn ${status==='P'?'present':''}" ${future?"disabled":""} data-mark="${t.id}|${iso}|P" style="width:44px;">P</button>
+          <button class="stamp-btn ${status==='A'?'absent':''}" ${future?"disabled":""} data-mark="${t.id}|${iso}|A" style="width:44px;">A</button>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+/* ===================== RENDER: SUBJECTS ===================== */
+function renderSubjects(){
+  const { bySubject } = computeStats();
+  return `
+  <div class="wrap">
+    <div class="card">
+      <div class="serif" style="font-weight:700; margin-bottom:10px;">Subject-wise attendance</div>
+      ${Object.values(bySubject).length===0 ? `<p class="muted">No subjects yet — add lectures in Settings.</p>` : `
+      <table>
+        <thead><tr><th style="text-align:left;">Subject</th><th>Held</th><th>Present</th><th style="text-align:right;">%</th></tr></thead>
+        <tbody>
+          ${Object.values(bySubject).map(s=>{
+            const pct = s.held===0?null:Math.round((s.present/s.held)*1000)/10;
+            const color = pct===null?"var(--muted)":pct>=75?"var(--present)":pct>=65?"var(--gold)":"var(--absent)";
+            return `<tr>
+              <td><b>${escapeHtml(s.code)}</b><br><span class="muted" style="font-size:10px;">${escapeHtml(s.name)}</span></td>
+              <td class="center mono">${s.held}</td>
+              <td class="center mono">${s.present}</td>
+              <td style="text-align:right; font-weight:700; color:${color};" class="mono">${pct===null?"—":pct+"%"}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`}
+    </div>
+  </div>`;
+}
+
+/* ===================== RENDER: SETTINGS ===================== */
+function renderSettings(){
+  const p = state.profile || {};
+  return `
+  <div class="wrap">
+    <div class="card">
+      <div class="serif" style="font-weight:700; margin-bottom:8px;">Profile</div>
+      <div class="muted">Username</div><div style="margin-bottom:8px;">${escapeHtml(p.username||"")}</div>
+      <div class="muted">Full name</div><div style="margin-bottom:8px;">${escapeHtml(p.full_name||"—")}</div>
+      <div class="muted">College</div><div style="margin-bottom:8px;">${escapeHtml(p.college||"—")}</div>
+      <div class="muted">Course / Semester</div><div>${escapeHtml(p.course||"—")} ${p.semester?"· Sem "+escapeHtml(p.semester):""}</div>
+    </div>
+    <div class="card">
+      <div class="serif" style="font-weight:700; margin-bottom:8px;">Timetable</div>
+      <p class="muted">Add or remove lectures.</p>
+      <button id="btn-edit-timetable" class="btn btn-outline btn-block">Edit timetable</button>
+    </div>
+    <button id="btn-logout" class="btn btn-danger btn-block">Log out</button>
+  </div>`;
+}
+
+/* ===================== EVENT BINDING ===================== */
+function bindAppEvents(){
+  document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click", ()=>{ state.view=b.dataset.tab; render(); }));
+
+  document.getElementById("btn-logout")?.addEventListener("click", doLogout);
+  document.getElementById("btn-example")?.addEventListener("click", useExampleTimetable);
+  document.getElementById("btn-finish-setup")?.addEventListener("click", ()=>{ state.view="dashboard"; render(); });
+  document.getElementById("btn-edit-timetable")?.addEventListener("click", ()=>{ state.view="setup"; render(); });
+
+  document.getElementById("btn-scan-photo")?.addEventListener("click", ()=>{
+    document.getElementById("photo-input")?.click();
+  });
+  document.getElementById("photo-input")?.addEventListener("change", (e)=>{
+    const file = e.target.files?.[0];
+    if(file) scanTimetablePhoto(file);
+    e.target.value = "";
+  });
+
+  document.querySelectorAll("[data-scan]").forEach(inp=>inp.addEventListener("input", ()=>{
+    const [day, idx, field] = inp.dataset.scan.split("|");
+    state.scanResult[day][parseInt(idx)][field] = inp.value;
+  }));
+  document.querySelectorAll("[data-scanrm]").forEach(b=>b.addEventListener("click", ()=>{
+    const [day, idx] = b.dataset.scanrm.split("|");
+    state.scanResult[day].splice(parseInt(idx),1);
+    render();
+  }));
+  document.getElementById("btn-confirm-scan")?.addEventListener("click", confirmScanResult);
+  document.getElementById("btn-cancel-scan")?.addEventListener("click", ()=>{
+    state.scanResult = null; state.view="setup"; render();
+  });
+
+  document.querySelectorAll("[data-addday]").forEach(b=>b.addEventListener("click", ()=>openAddLectureModal(b.dataset.addday)));
+  document.querySelectorAll("[data-rm]").forEach(b=>b.addEventListener("click", ()=>removeLecture(b.dataset.rm)));
+
+  document.querySelectorAll("[data-mark]").forEach(b=>b.addEventListener("click", ()=>{
+    const [ttId, iso, status] = b.dataset.mark.split("|");
+    markAttendance(ttId, iso, status);
+  }));
+
+  document.querySelectorAll("[data-week]").forEach(b=>b.addEventListener("click", ()=>{
+    const v = b.dataset.week;
+    state.weekStart = v==="0" ? mondayOf(new Date()) : addDays(state.weekStart, 7*parseInt(v));
+    render();
+  }));
+
+  document.querySelectorAll("[data-month]").forEach(b=>b.addEventListener("click", ()=>{
+    const v = parseInt(b.dataset.month);
+    state.calMonth = new Date(state.calMonth.getFullYear(), state.calMonth.getMonth()+v, 1);
+    render();
+  }));
+
+  document.querySelectorAll("[data-day]").forEach(b=>b.addEventListener("click", ()=>{
+    document.getElementById("cal-day-detail").innerHTML = renderDayDetail(b.dataset.day);
+    document.querySelectorAll("#cal-day-detail [data-mark]").forEach(btn=>btn.addEventListener("click", ()=>{
+      const [ttId, iso, status] = btn.dataset.mark.split("|");
+      markAttendance(ttId, iso, status);
+    }));
+  }));
+}
+
+/* ===================== BOOT ===================== */
+(async function boot(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session){
+    state.session = session;
+    await loadEverything();
+    state.view = state.timetable.length===0 ? "setup" : "dashboard";
+  } else {
+    state.view = "auth-login";
+  }
+  render();
+})();
+</script>
+</body>
+</html>
